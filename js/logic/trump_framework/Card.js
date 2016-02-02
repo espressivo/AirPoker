@@ -6,7 +6,6 @@ export const Suits = {
     SPADE: Symbol('spade'),
     CLUB: Symbol('club')
 };
-//this.suitNum = Object.keys(Suits).length;
 
 export const Numbers = {
     1: Symbol('ace'),
@@ -29,12 +28,11 @@ export class Card {
      * Creates new card instance by suit and number.
      * Suit is at either one of SPADE,DIAMOND,CLUB or HEART.
      * 
-     * @param str trump suit
-     * @param str trump number
+     * @param obj setCard = {suit: <Suits_key>, number: <Numbers_key>
      */
-    constructor(suit, number) {
-        this.suit = Suits[suit];
-        this.number = Numbers[number];
+    constructor(setCard) {
+        this.suit = Suits[setCard.suit];
+        this.number = Numbers[setCard.number];
         if (!this.suit || !this.number) {
             throw 'ERROR: invalid Card value.';
         }
