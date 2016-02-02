@@ -1,4 +1,5 @@
 import Deck from "./Deck.js"
+import {Suits, Numbers} from "./Card.js"
 
 /**
  * Defines trump rule
