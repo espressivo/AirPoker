@@ -28,13 +28,11 @@ export class Card {
      * Creates new card instance by suit and number.
      * Suit is at either one of SPADE,DIAMOND,CLUB or HEART.
      * 
-     * @param obj setCard = {suit: <Suits_key>, number: <Numbers_key>
+     * @param int number = <Numbers_key>
+     * @param str suit = <Suits_key>
      */
-    constructor(setCard) {
-        this.suit = Suits[setCard.suit];
-        this.number = Numbers[setCard.number];
-        if (!this.suit || !this.number) {
-            throw 'ERROR: invalid Card value.';
-        }
+    constructor(number, suit) {
+        this.number = Numbers[number];
+        this.suit = Suits[suit];
     }
 }
