@@ -1,3 +1,5 @@
+'use strict';
+
 import {Card, Suits, Numbers} from "./Card.js";
 import Joker from "./Joker.js";
 /*
@@ -23,39 +25,28 @@ export default class Deck {
     }
 
     /*
-     * Gets a card at random.
-     * @return obj card => Card or Joker class object
+     * Gets a card.
+     * @param  obj card => Card or Joker class object
+     * @return obj drawCard => the same card as param, or at random if param is nothing.
      */
-    draw(cardObj) {
+    draw(card) {
         let indexNum;
-        if (typeof cardObj == 'undefined') {
+        if (typeof card == 'undefined') {
             indexNum = this.topCardIndex_ || Math.floor(Math.random() * this.deck_.length);
         } else {
-            indexNum = this.deck_.indexOf(cardObj);
+            indexNum = this.deck_.indexOf(card);
         }
-        let card = this.deck_[indexNum];
-        this.remove_(indexNum);
-        this.topCardIndex_ = null;
-        return card;
-    }
-
-    /*
-     * Gets one of the specified card.
-     * @param  obj cardObj => Card or Joker class object
-     * @return obj card    => the same object as param
-     */
-    drawOf(cardObj) {
-        let indexNum = this.deck_.indexOf(cardObj);
         let drawCard = this.deck_[indexNum];
         this.remove_(indexNum);
-        return card;
+        this.topCardIndex_ = null;
+        return drawCard;
     }
 
     /*
      * Checks the number of cards in this deck.
      * @return int the number of cards in this deck
      */
-    remain() {
+    checkNum() {
         return this.deck_.length;
     }
 
