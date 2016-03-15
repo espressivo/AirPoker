@@ -1,4 +1,4 @@
-import Deck from "../../js/logic/trump_framework/Deck.js";
+import Deck from "../../main/logic/trump_framework/deck.js";
 
 var set = {'deck_num': 1, 'jocker_num': 0};
 var deck = new Deck(set);

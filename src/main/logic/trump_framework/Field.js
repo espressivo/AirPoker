@@ -1,6 +1,6 @@
 'use strict';
 
-import {Card, Suits, Numbers} from "./Card.js";
+import {Card, Suits, Numbers} from "./card.js";
 /*
  * Creates Card class in only this class.
  */ 

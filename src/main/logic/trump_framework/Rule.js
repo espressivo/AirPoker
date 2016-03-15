@@ -1,5 +1,5 @@
-import Deck from "./Deck.js"
-import {Suits, Numbers} from "./Card.js"
+import Deck from "./deck.js"
+import {Suits, Numbers} from "./card.js"
 
 /**
  * Defines trump rule
@@ -18,6 +18,10 @@ export default class Rule {
      * @return str combination. If it is not found, the value is null.
      */
     findCandidate(hand, table) {
-        throw new Error('Not Implemented');
+        throw new Error('Implement me');
+    }
+
+    rank() {
+        throw new Error('Implement me');
     }
 }

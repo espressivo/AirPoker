@@ -1,4 +1,5 @@
-import {Card} from './logic/trump_framework/Card.js';
+import {Card} from './logic/trump_framework/card.js';
+//import AirPoker from './logic/airpoker.js';
 
 var React = require('react');
 var a = new Card(5, 'HEART');

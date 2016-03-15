@@ -1,5 +1,5 @@
 'use strict';
-import {Card} from "./Card.js";
+import {Card} from "./card.js";
 
 export default class Joker extends Card {
     /**

@@ -1,7 +1,7 @@
 'use strict';
 
-import {Card, Suits, Numbers} from "./Card.js";
-import Joker from "./Joker.js";
+import {Card, Suits, Numbers} from "./card.js";
+import Joker from "./joker.js";
 /*
  * Creates Card class in only this class.
  * 'deck' array is not shuffled. When drawing, the card is selected at random every time. It is because this is client side program.
