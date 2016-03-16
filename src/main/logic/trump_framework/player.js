@@ -1,11 +1,9 @@
-//import  from "./.js";
 export default class Player {
     // handをprotected(=hand_)にしてopenHand() / countHand()を実装？
     // handが配列だと呼び出し側に意識させない作りにしたいので後で実装したい
     constructor(baseInfo) {
-        this.name = baseInfo;
-        this.turn = baseInfo;
-        this.hand = new Array();
+        {name: this.name, turn: this.turn, tip: this.tip} = baseInfo;
+        this.hand_ = new Array();
     }
     /*
      *  Gets a card

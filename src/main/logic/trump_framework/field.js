@@ -5,7 +5,9 @@ import {Card, Suits, Numbers} from "./card.js";
  * Creates Card class in only this class.
  */ 
 export default class Field {
-    constructor(setup) {
+    constructor() {
+        this.field_ = new Array();
+        this.trash_ = new Array();
     }
 
     /*
@@ -14,12 +16,18 @@ export default class Field {
      * @return obj drawCard => the same card as param, or at random if param is nothing.
      */
     setCard(card) {
+        throw 'Please override me.';
     }
     // テーブルに置かれたカードを表す配列
-    viewField() {
-
+    view() {
+        throw 'Please override me.';
     }
     trash(card) {
-
+        // indexOf -> this.field.splice() -> this.trash_.push(card)
+    }
+    returnHand(player) {
+             // typeof player == 'Player' // parent class check
+             // indexOf -> this.field.splice()
+             // player.receive(card);
     }
 }

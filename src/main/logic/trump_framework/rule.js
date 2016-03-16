@@ -24,4 +24,9 @@ export default class Rule {
     rank() {
         throw new Error('Implement me');
     }
+
+    action() {}
+    judge() {}
+    win() {}
+    setOrder() {}
 }
