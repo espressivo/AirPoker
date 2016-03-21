@@ -5,63 +5,61 @@ export default class Pocker extends Rule {
     constructor() {
         super(1);
     }
-    // hand is sorted
-    findCandidate(hand, table) {
-        hand.sort(function(a, b){
-            return (a.number > b.number) ? 1 : -1;
-        });
-        var rankFlag = {};
-        /*
-            royal: false,
-            straight: false,
-            flush: false,
-            four: false,
-            three: false,
-            pair: 0,
-            highNum: null,
-            highSuit: null
-        for(var i = 1; i < 5; ++i){
-            if(hand[0].suit != hand[i].suit){
-                rankFlag.flush = false;
-                break;
-            }
-        }*/
-        // flush: hand内のsuitが全て同じ
-        rankFlag.flush = hand.every( (e, i, self) => {
-            return (e.suit === self[0].suit);
-        });
 
-        for(var i = 0; i < 4; ++i){
-            for(var j = i+1; j < 5; ++j){
-                if(hand[i].number == hand[j].number)
-                    ++pair;
-            }
+    //findCandidate(hand, table) {
+
+
+    /*****************************
+     * rank
+     *   Retruns the following base rank.
+     *      StraightFlush: 1,
+     *      FourCard: 2,
+     *      FullHouse: 3,
+     *      Flush: 4,
+     *      Straight: 5,
+     *      ThreeCard: 6,
+     *      TwoPair: 7,
+     *      Pair: 8,
+     *   And, adds one HighCard to the rank.
+     *   Ace(1) is highest and Two(2) is lowest.
+     *
+     *   @param  obj hand = {number: int, suit: str}
+     *   @return obj rank = {order: str, highest: int}
+     *****************************/
+    rank(hand) {
+        let rank = isFlash(hand) ? {order: 'Flush'} : {};
+
+        const numbers = hand.reduce((r, h) => {r.push(+h.number);return r;}, [])
+                            .sort((a, b) => a - b);
+        if (isStraight(numbers)) {
+            rank.order = rank.order ? 'StraightFlush' : 'Straight';
         }
-        var straight = 1;
-        for(var i = 1; i < 5; ++i){
-            if(cards[i-1].number + 1 != cards[i].number){
-                straight = 0;
-                break;
-            }
+        if (!rank) {
+            const pairs = numbers.reduce( (pair, n) => {
+                pair[n] = pair[n] ? pair[n] + 1: 1;
+                return pair;
+            }, {} );
+            pairs
         }
-        if(cards[0].number == 1 && cards[1].number == 10 && cards[2].number == 11 && cards[3].number == 12 && cards[4].number == 13){
-            rankFlag.royal = 1;
-        }
-        return (flush * 100 + straight * 10 + pair);
-    }
-    rank() {
-        this.ranks = {
-            RoyalStraightFlush: 1,
-            StraightFlush: 2,
-            FourCard: 3,
-            FullHouse: 4,
-            Flush: 5,
-            Straight: 6,
-            ThreeCard: 7,
-            TwoPair: 8,
-            Pair: 9,
-            HighCard: 10
-        }
+        return rank;
     }
 
+    // flush: hand内のsuitが全て同じ
+    isFlash(hand) {
+        return hand.every((e, i, self) => e.suit === self[0].suit);
+    }
+
+    isStraight(numbers) {
+        return numbers.every((e, i, self) => e + 1 === self[i + 1])
+            || numbers.toString() == [1,10,11,12,13].toString() ;
+    }
+    /*****************************
+     * judgeInSameRank
+     *   Retruns a highest number of the hand.
+     *   If both of ranks are the same, compare a highest number of the hand.
+     *   Ace(1) is highest. Two(2) is lowest.
+     *   If they are the same, draw.
+     *
+     *   Suit and the Second Number are not considered.
+     *****************************/
 }
