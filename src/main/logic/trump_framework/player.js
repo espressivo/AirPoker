@@ -1,28 +1,34 @@
+'use strict';
 export default class Player {
-    // handをprotected(=hand_)にしてopenHand() / countHand()を実装？
-    // handが配列だと呼び出し側に意識させない作りにしたいので後で実装したい
-    constructor(baseInfo) {
-        {name: this.name, turn: this.turn, tip: this.tip} = baseInfo;
-        this.hand_ = new Array();
+  constructor({name: name, turn: turn, tip: tip}) {
+    this.name = name;
+    this.turn = turn;
+    this.tip = tip;
+    this.hand_ = [];
+  }
+
+  /*
+   *  Gets a card
+   */
+  receive(card) {
+    this.hand_.push(card);
+  }
+
+  viewHand() {
+    return this.hand_;
+  }
+
+  /*
+   * Trashes(or Gives) a card at random or specified.
+   */
+  send(card) {
+    let indexNum;
+    if (typeof card == 'undefined') {
+      indexNum = Math.floor(Math.random() * this.hand_.length);
+    } else {
+      indexNum = this.hand_.indexOf(card);
     }
-    /*
-     *  Gets a card
-     */
-    receive(card) {
-        this.hand.push(card);
-    }
-    /*
-     * Trashes(gives) a card at random or specified.
-     */
-    send(card) {
-        let indexNum;
-        if (typeof card == 'undefined') {
-            indexNum = Math.floor(Math.random() * this.hand.length);
-        } else {
-            indexNum = this.hand.indexOf(card);
-        }
-        let trashCard = card || this.hand[indexNum];
-        this.hand_.splice(indexNum, 1);
-        return trashCard;
-    }
+    this.hand_.splice(indexNum, 1); //trash
+    return card || this.hand_[indexNum];
+  }
 }

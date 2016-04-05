@@ -1,32 +1,62 @@
 import Deck from "./deck.js"
-import {Suits, Numbers} from "./card.js"
+import Player from './player.js';
 
 /**
  * Defines trump rule
  */
 export default class Rule {
-    constructor(setup_deck) {
-        // setup_deck = {deckNum : 1, JockerNum : 0}
-        this.deck = new Deck(setup_deck);
+  // setPlayers' order decide player's turn
+  constructor(setDeck, setPlayers) {
+    this.deck = new Deck(setDeck);
+    this.players = [];
+    for (let i=0;i < setPlayers.length;i++) {
+      let setPlayer = setPlayers[i];
+      this.players[setPlayer.name] = new Player(setPlayer);
     }
+  }
 
-    /**
-     * finds cards to be able to put on the table from Player's hand and Table.
-     * 
-     * @param  obj hand
-     * @param  obj table
-     * @return str combination. If it is not found, the value is null.
-     */
-    findCandidate(hand, table) {
-        throw new Error('Implement me');
+  /**
+   * initHand
+   *   Deals out <initNum> cards to each player.
+   *
+   *   @param  str playerName
+   *   @param  int initHandNum
+   */
+  initHand(playerName, initHandNum) {
+    if (initHandNum <= 0) {return;}
+    for (let j = 0; j < initHandNum; j++) {
+      this.players[playerName].receive(this.deck.draw());
     }
+  }
 
-    rank() {
-        throw new Error('Implement me');
-    }
+  /**
+   * findCandidates
+   *   Finds cards to be able to put on the table from Player's hand and Table.
+   *
+   *   @param  str playerName
+   *   @return arr candidates
+   */
+  findCandidates(playerName) {
+    throw new Error('Implement me');
+  }
 
-    action() {}
-    judge() {}
-    win() {}
-    setOrder() {}
+  rank(cards) {
+    throw new Error('Implement me');
+  }
+
+  action(playerName, card, options) {
+    throw new Error('Implement me');
+  }
+
+  bet(playerName, tip, options) {
+    throw new Error('Implement me');
+  }
+
+  judge() {
+    throw new Error('Implement me using win_()');
+  }
+
+  win_() {
+    throw new Error('Implement me');
+  }
 }

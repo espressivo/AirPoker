@@ -1,26 +1,18 @@
-import {Card} from './logic/trump_framework/card.js';
-import Player from './logic/trump_framework/player.js';
-//import AirPoker from './logic/airpoker.js';
+import AirPoker from './logic/airpoker.js';
 
 /*
  * main: player regist() -> setTurn() -> play() { rule.action() }
  */
-var players = new Array();
-players.push(new Player({name: 'You', turn: 1, tip: 20}));
-players.push(new Player({name: 'NPC', turn: 2, tip: 20}));
-var react = require('react');
-var a = new Card(5, 'HEART');
-var b = new Card(6, 'HEART');
-var res = "wrong";
-if (a.suit === b.suit) {
-    res = "suit ok";
-    if (a.number != b.number) {
-        res += "    num diff";
-    }
-}
-// npc/you プレイヤーに25枚配り、そこから強い順にまとめて合計値を出す
+const a = new AirPoker([{name: 'You', turn: 1, tip: 20}, {name: 'NPC', turn: 2, tip: 20}]);
+let candidates = a.findCandidates('You');
+let field = a.action('You', candidates[0]);
+a.bet('You', 1);
+console.log(field);
+console.log(a.judge([{name: 'You', maxRankFlag: true}]));
 // generatePair_() -> sumCard()
-var AirPoker = react.createClass({
+/*
+var react = require('react');
+var AirPokerComp = react.createClass({
     getInitialState: function() {
         return {
             check: res
@@ -36,6 +28,7 @@ var AirPoker = react.createClass({
 });
 
 react.render(
-  <AirPoker />,
+  <AirPokerComp />,
   document.getElementById('container')
 );
+*/
