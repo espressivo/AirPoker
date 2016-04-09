@@ -8,7 +8,7 @@ export default class AirPokerField extends Field {
     this.field = {};
     this.sideField = {};
     Object.keys(Numbers).forEach(function(num) {
-      this.num = Object.keys(Suits);
+      this[num] = Object.keys(Suits);
     }, this.sideField);
   }
 

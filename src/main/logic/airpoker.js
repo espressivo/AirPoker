@@ -36,9 +36,9 @@ export default class AirPocker extends Rule {
   initHand(playerName, initHandNum) {
     for (let j = 0; j < initHandNum; j++) {
       let sumup = 0;
-      for (let x = 0;x < 5; x++) {
+      for (let x = 0; x < 5; x++) {
         let card = this.deck.draw();
-        sumup += +card.number;
+        sumup += Number(card.number);
       }
       this.players[playerName].receive(sumup);
     }
