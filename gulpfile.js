@@ -8,7 +8,7 @@ var webserver = require('gulp-webserver');
 var sass = require('gulp-sass');
  
 gulp.task('browserify', function() {
-  browserify('./src/main/app.jsx', { debug: true })
+  browserify('./src/main/airpoker.jsx', { debug: true })
     .transform(babelify)
     .bundle()
     .on("error", function (err) { console.log("Error : " + err.message); })

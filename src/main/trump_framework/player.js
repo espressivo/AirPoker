@@ -1,10 +1,17 @@
 'use strict';
 export default class Player {
-  constructor({name: name, turn: turn, tip: tip}) {
-    this.name = name;
-    this.turn = turn;
-    this.tip = tip;
+  // This class doesn't manage the property of "turn".
+  constructor(name, options) {
     this.hand_ = [];
+    // require param
+    this.name = name;
+    // option params
+    if (options.tip != null) {
+      this.tip = options.tip;
+    }
+    if (options.turn != null) {
+      this.turn = options.turn;
+    }
   }
 
   /*

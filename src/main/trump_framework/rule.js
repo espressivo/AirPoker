@@ -9,9 +9,9 @@ export default class Rule {
   constructor(setDeck, setPlayers) {
     this.deck = new Deck(setDeck);
     this.players = [];
-    for (let i=0;i < setPlayers.length;i++) {
+    for (let i=0; i < setPlayers.length; i++) {
       let setPlayer = setPlayers[i];
-      this.players[setPlayer.name] = new Player(setPlayer);
+      this.players[setPlayer.name] = new Player(setPlayer.name, setPlayer.options);
     }
   }
 

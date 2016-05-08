@@ -1,6 +1,12 @@
+'use strict';
 import Rule from './trump_framework/rule.js';
-import AirPokerField from './airpokerfield.js';
+import Field from './trump_framework/field.js';
 
+/*
+ * YourPoint = RankPoint + HighCard (+ SuitOrder <- in the future)
+ *   HighCard is from 2 to 1(=14).
+ *   Suit is from 1 to 4.
+ */
 const RANK_POINTS = {
   RoyalStraightFlush: 200,
   StraightFlush: 180,
@@ -14,14 +20,21 @@ const RANK_POINTS = {
   OnePair: 20,
   HighCard: 0
 };
+
 export default class AirPocker extends Rule {
-  constructor(setPlayers) {
+  constructor(yourName, npcName) {
+    // init
     const setDeck = {deckNum: 1, JockerNum: 0};
+    const setPlayers = [{name: yourName, options: {tip: 20}}, {name: npcName, options: {tip: 20}}];
     super(setDeck, setPlayers);
-    this.field = new AirPokerField();
-    const maxHandNum = Math.floor(this.deck.showRemains().length / 5 / setPlayers.length);
+
+    this.field = new Field();
+    this.remainingCardCandidates = this.deck.showRemains();
+    //this.npcModel = new Model(npcName);
+    // set hand
+    const handNum = 5; //= Math.floor(this.deck.showRemains().length / 5 / setPlayers.length);
     for (let i = 0; i < setPlayers.length; i++) {
-      this.initHand(setPlayers[i].name, maxHandNum);
+      this.initHand(setPlayers[i].name, handNum);
     }
   }
 
@@ -36,6 +49,7 @@ export default class AirPocker extends Rule {
   initHand(playerName, initHandNum) {
     for (let j = 0; j < initHandNum; j++) {
       let sumup = 0;
+      // Sums up five card numbers.
       for (let x = 0; x < 5; x++) {
         let card = this.deck.draw();
         sumup += Number(card.number);
@@ -83,12 +97,12 @@ export default class AirPocker extends Rule {
    *****************************/
   judge(maxRankFlags) {
     const field = this.field.view();
+    let max = {rank: {name: '', point: 0}};
     for (let i=0;i < maxRankFlags.length;i++) {
       let {name: playerName, maxRankFlag: maxRankFlag} = maxRankFlags[i];
       let rankCandidates = this.getCombinations_(field[playerName]);
       if (maxRankFlag) {
         this.players[playerName].tip = this.players[playerName].tip - 3;
-        let max = {rank: {point: 0}};
         for (let i=0;i < rankCandidates.length;i++) {
           let comb = rankCandidates[i];
           let rank = this.rankByNumbers_(comb);
@@ -102,7 +116,6 @@ export default class AirPocker extends Rule {
             max.rank = rank;
           }
         }
-        console.log( {rank: max.rank, card: max.comb} );
       } else {
         const index = Math.floor(Math.random() * rankCandidates.length);
         const rank = this.rankByNumbers_(rankCandidates[index]);
@@ -110,7 +123,7 @@ export default class AirPocker extends Rule {
       // delete cards from sideField
     }
     //if (!win()) {this.filed.trash();}
-    return;
+    return {rank: max.rank, card: max.comb} ;
   }
 
   /**
