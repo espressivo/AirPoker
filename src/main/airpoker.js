@@ -22,15 +22,16 @@ const RANK_POINTS = {
 };
 
 export default class AirPocker extends Rule {
-  constructor(yourName, npcName) {
+  constructor(yourName, model) {
     // init
     const setDeck = {deckNum: 1, JockerNum: 0};
-    const setPlayers = [{name: yourName, options: {tip: 20}}, {name: npcName, options: {tip: 20}}];
+    const setPlayers = [{name: yourName, options: {tip: 20}}, {name: model.name, options: {tip: 20}}];
     super(setDeck, setPlayers);
 
+    this.model = model;
+    // fieldの使い方は、poolとして、suitを計算する用途にする？
     this.field = new Field();
     this.remainingCardCandidates = this.deck.showRemains();
-    //this.npcModel = new Model(npcName);
     // set hand
     const handNum = 5; //= Math.floor(this.deck.showRemains().length / 5 / setPlayers.length);
     for (let i = 0; i < setPlayers.length; i++) {
@@ -70,7 +71,7 @@ export default class AirPocker extends Rule {
   }
 
   /*
-   * action
+   * setField
    *   @override
    *   Sets card to field.
    *
@@ -78,8 +79,12 @@ export default class AirPocker extends Rule {
    *   @param  int card
    *   @return obj this.field
    */
-  action(playerName, card) {
+  setField(playerName, card) {
+    // set your card
     this.field.set(playerName, this.players[playerName].send(card));
+    // set npc's card
+    let npcCard = this.model.setField(this.players[this.model.name].viewHand(), this.remainingCardCandidates);
+    this.field.set(this.model.name, this.players[this.model.name].send(npcCard));
     return this.field.view();
   }
 
@@ -122,8 +127,12 @@ export default class AirPocker extends Rule {
       }
       // delete cards from sideField
     }
-    //if (!win()) {this.filed.trash();}
-    return {rank: max.rank, card: max.comb} ;
+    //if (!win_()) {this.filed.trash();}
+    let trashCards = this.field.return();
+    for (let j=0;j < trashCards.length;j++) {
+      this.field.trash(trashCards[j]);
+    }
+    return {rank: max.rank, card: max.comb};
   }
 
   /**
@@ -165,7 +174,7 @@ export default class AirPocker extends Rule {
    *   @param  obj cards = {number: int, suit: str}
    *   @return obj rank = {name: str, point: int}
    *****************************/
-  rank(cards) {
+  rank_(cards) {
     let rank = this.isFlash_(cards) ? {name: 'Flush'} : {};
   }
 

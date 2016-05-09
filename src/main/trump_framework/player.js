@@ -36,6 +36,11 @@ export default class Player {
       indexNum = this.hand_.indexOf(card);
     }
     this.hand_.splice(indexNum, 1); //trash
+    /*
+    this.hand_.some(function(v, i){
+      if (v==hand) hands.splice(i,1);
+    });
+    */
     return card || this.hand_[indexNum];
   }
 }

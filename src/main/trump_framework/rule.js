@@ -40,11 +40,7 @@ export default class Rule {
     throw new Error('Implement me');
   }
 
-  rank(cards) {
-    throw new Error('Implement me');
-  }
-
-  action(playerName, card, options) {
+  setField(playerName, card, options) {
     throw new Error('Implement me');
   }
 

@@ -4,32 +4,26 @@
  */
 export default class Field {
   constructor() {
-    this.latestSetPlayer = null;
     this.pool_ = [];
     this.trash_ = [];
   }
 
-  /*
-   * @param  obj card => Card or Joker class object
-   */
-  set(card, playerName) {
-    this.pool_.push(card);
-    this.latestSetPlayer = playerName;
+  set(playerName, card) {
+    this.pool_.push({player: playerName, card: card});
   }
 
   view() {
     return this.pool_;
   }
 
-  return(card) {
-    if (typeof card == 'undefined') {
-      let allCardsInPool = Object.assign([], this.pool_);
-      this.pool_ = [];
-      return allCardsInPool;
-    } else {
-      this.pool_.splice(this.pool_.indexOf(card), 1);
-      return card;
-    }
+  // @todo 引数cardの時も実装する this.pool_.splice(i, 1)
+  return() {
+    let cards = [];
+    for (let i=0;i < this.pool_.length;i++) {
+      cards.push(this.pool_[i].card);
+    }  
+    this.pool_ = [];
+    return cards;
   }
 
   trash(card) {
