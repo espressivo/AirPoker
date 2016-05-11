@@ -12,25 +12,33 @@ var AirPokerUi = React.createClass({
   getInitialState: function() {
     return {
       hand: this.props.airPoker.findCandidates('You'),
-      tip: 20,
-      field: null,
+      air: 25, // this.props.airPoker.getRemainingAir('You')
+      round: this.props.airPoker.round,
+      field: null, 
+      phase: 'select', // or 'bet' or 'end' (or 'enter')
       win: null
     };
   },
   setField: function(card) {
     let field = this.props.airPoker.setField('You', card);
-    this.setState({field: field, hands: this.props.airPoker.findCandidates('You')});
+    this.setState({
+      field: field,
+      hands: this.props.airPoker.findCandidates('You'),
+      phase: 'bet'
+    });
   },
   judge: function(card) {
     let result = this.props.airPoker.judge([{name: 'You', maxRankFlag: true}]);
     if (result) {
-      this.setState({win: result});
+      this.setState({
+        win: result,
+        phase: 'end'
+      }); // true or false
     } else {
       this.setState({field: null});
     }
   },
   render: function() {
-    let maxRankCombinations = {};
     let fieldNodes = () => {
       if(this.state.field != null) {
         return (
@@ -47,29 +55,22 @@ var AirPokerUi = React.createClass({
     return (
       <div className="airPoker">
         <h1>AirPoker</h1>
-        <NpcHand hand={hand} />
+        <Hand hand={hand} player='npc' phase={this.state.phase} setField={this.setField} />
         {fieldNodes()}
-        <Hand hand={hand} setField={this.setField} maxRankCombinations={maxRankCombinations} />
+        <Hand hand={hand} player='you' phase={this.state.phase} setField={this.setField} />
       </div>
     );
   }
 });
 var Hand = React.createClass({
-  getInitialState: function() {
-    return {
-      hand: this.props.hand
-    };
-  },
-  componentWillReceiveProps: function(nextProps) {
-    this.setState({
-      hand : nextProps.hand
-    });
-  },
   render: function() {
-    let cardNodes = this.state.hand.map(function(card) {
+    let keyPrefix = 1;
+    let cardNodes = this.props.hand.map(function(card) {
+      if (this.props.player === 'npc') {
+        card = '?';
+      }
       return (
-        // maxRankCombination={maxRankCombinations[card]} 
-        <Card card={card} setField={this.props.setField} key={card}/>
+        <Card card={card} phase={this.props.phase} setField={this.props.setField} key={keyPrefix++ + '-' + card}/>
       );
     }, this);
     return (
@@ -87,24 +88,18 @@ var Card = React.createClass({
     this.props.setField(this.props.card);
   },
   render: function() {
-    return (
-      <button className="card" type="button" onClick={this.setField} onMouseOver={this.maxRankCombination}>{this.props.card}</button>
-    );
-  }
-});
-var NpcHand = React.createClass({
-  render: function() {
-    let i = 0;
-    let cardNodes = this.props.hand.map(function() {
-      return (
-        <span className="card" type="button" key={++i}>?</span>
-      );
-    }, this);
-    return (
-      <div className="hand">
-        {cardNodes}
-      </div>
-    );
+    let cardNode = () => {
+      if (this.props.phase != 'select' || this.props.card === '?') {
+        return (
+          <span className="card">{this.props.card} </span>
+        );
+      } else {
+        return (
+          <button className="card" type="button" onClick={this.setField} onMouseOver={this.maxRankCombination}>{this.props.card}</button>
+        );
+      }
+    };
+    return cardNode();
   }
 });
 var Field = React.createClass({

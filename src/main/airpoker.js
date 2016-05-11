@@ -28,10 +28,12 @@ export default class AirPocker extends Rule {
     const setPlayers = [{name: yourName, options: {tip: 20}}, {name: model.name, options: {tip: 20}}];
     super(setDeck, setPlayers);
 
+    // member
+    this.round = 1; // judge回数. judgeは手札がなくなるまで
     this.model = model;
-    // fieldの使い方は、poolとして、suitを計算する用途にする？
-    this.field = new Field();
+    this.field = new Field(); // fieldの使い方は、poolとして、suitを計算する用途にする？
     this.remainingCardCandidates = this.deck.showRemains();
+
     // set hand
     const handNum = 5; //= Math.floor(this.deck.showRemains().length / 5 / setPlayers.length);
     for (let i = 0; i < setPlayers.length; i++) {
@@ -88,7 +90,7 @@ export default class AirPocker extends Rule {
     return this.field.view();
   }
 
-  bet(playerName, tip, options) {
+  bet(playerName, raise, tip, options) {
   }
 
   /*****************************
