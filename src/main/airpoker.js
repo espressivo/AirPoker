@@ -132,10 +132,11 @@ export default class AirPocker extends Rule {
 
   getMaxRaise() {
     let totalTips = 0;
-    for (let i = 0; i < this.players.length; i++) {
+    let playerNum = this.players.length;
+    for (let i = 0; i < playerNum; i++) {
       totalTips += this.players[i].betTip;
     }
-    return Math.floor(totalTips / 2);
+    return Math.floor(totalTips / playerNum);
   }
 
   /*****************************
