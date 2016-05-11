@@ -44,7 +44,7 @@ export default class Rule {
     throw new Error('Implement me');
   }
 
-  bet(playerName, tip, options) {
+  bet(playerName, action, tip) {
     throw new Error('Implement me');
   }
 

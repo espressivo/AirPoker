@@ -35,7 +35,7 @@ export default class AirPocker extends Rule {
     this.remainingCardCandidates = this.deck.showRemains();
 
     // set hand
-    const handNum = 5; //= Math.floor(this.deck.showRemains().length / 5 / setPlayers.length);
+    const handNum = Math.floor(this.remainingCardCandidates.length / 5 / setPlayers.length); // 5
     for (let i = 0; i < setPlayers.length; i++) {
       this.initHand(setPlayers[i].name, handNum);
     }
@@ -76,6 +76,7 @@ export default class AirPocker extends Rule {
    * setField
    *   @override
    *   Sets card to field.
+   *   @todo player数が3人以上の時に対応していない
    *
    *   @param  str playerName
    *   @param  int card
@@ -90,7 +91,51 @@ export default class AirPocker extends Rule {
     return this.field.view();
   }
 
-  bet(playerName, raise, tip, options) {
+  /*****************************
+   * bet
+   *   @param
+   *   @return boolean true: go to next bet, false: end 
+   *****************************/
+  bet(playerName, action, tip) {
+    const player = this.players[playerName];
+    if (player.betTip == 0) {
+      // init
+      player.hasTip -= this.round;
+      player.betTip += this.round;
+    } else if (action === 'raise') {
+      if (tip > this.getMaxRaise()) {
+        return false; // invalid status
+      }
+      player.hasTip -= tip;
+      player.betTip += tip;
+    } else if (action === 'call') {
+      // preBetTipを保持する？or UIで計算？
+      player.hasTip -= tip;
+      player.betTip += tip;
+    } else if (action === 'check') {
+      player.betStatus = 'fold';
+      let betEnd = true;
+      for (let i = 0; i < this.players.length; i++) {
+        if (this.players[i].betStatus != 'fold') {
+          betEnd = false;
+        }
+      }
+      if (betEnd) {
+        return false;
+      }  
+    } else if (action === 'fold') {
+      player.betStatus = 'fold';
+      return false;
+    }
+    return true;
+  }
+
+  getMaxRaise() {
+    let totalTips = 0;
+    for (let i = 0; i < this.players.length; i++) {
+      totalTips += this.players[i].betTip;
+    }
+    return Math.floor(totalTips / 2);
   }
 
   /*****************************
@@ -101,6 +146,8 @@ export default class AirPocker extends Rule {
    *   If they are the same, draw.
    *
    *   Suit and the Second Number are not considered.
+   *   @param
+   *   @return str playerName <- winner
    *****************************/
   judge(maxRankFlags) {
     const field = this.field.view();
@@ -134,6 +181,7 @@ export default class AirPocker extends Rule {
     for (let j=0;j < trashCards.length;j++) {
       this.field.trash(trashCards[j]);
     }
+    // this.round++;
     return {rank: max.rank, card: max.comb};
   }
 

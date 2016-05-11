@@ -6,10 +6,11 @@ export default class Player {
     // require param
     this.name = name;
     // option params
-    if (options.tip != null) {
-      this.tip = options.tip;
+    if (typeof options.tip == 'number' && options.tip > 0) {
+      this.hasTip = options.tip;
+      this.betTip = 0;
     }
-    if (options.turn != null) {
+    if (typeof options.turn == 'number' && options.turn > 0) {
       this.turn = options.turn;
     }
   }
