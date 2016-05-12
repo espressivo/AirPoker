@@ -22,15 +22,13 @@ const RANK_POINTS = {
 };
 
 export default class AirPocker extends Rule {
-  constructor(yourName, model) {
+  constructor(setPlayers) {
     // init
     const setDeck = {deckNum: 1, JockerNum: 0};
-    const setPlayers = [{name: yourName, options: {tip: 20}}, {name: model.name, options: {tip: 20}}];
     super(setDeck, setPlayers);
 
     // member
     this.round = 1; // judge回数. judgeは手札がなくなるまで
-    this.model = model;
     this.field = new Field(); // fieldの使い方は、poolとして、suitを計算する用途にする？
     this.remainingCardCandidates = this.deck.showRemains();
 
@@ -61,6 +59,10 @@ export default class AirPocker extends Rule {
     }
   }
 
+  getRemainingAir(playerName) {
+    return this.players[playerName].hasTips;
+  }
+  
   /**
    * findCandidates
    *   Finds cards to be able to put on the table from Player's hand and Table.
@@ -85,49 +87,41 @@ export default class AirPocker extends Rule {
   setField(playerName, card) {
     // set your card
     this.field.set(playerName, this.players[playerName].send(card));
-    // set npc's card
-    let npcCard = this.model.setField(this.players[this.model.name].viewHand(), this.remainingCardCandidates);
-    this.field.set(this.model.name, this.players[this.model.name].send(npcCard));
     return this.field.view();
   }
 
   /*****************************
    * bet
    *   @param
-   *   @return boolean true: go to next bet, false: end 
+   *   @return boolean nextBet -> true:go to next bet/false:end 
    *****************************/
   bet(playerName, action, tip) {
+    let nextBet = true;
     const player = this.players[playerName];
     if (player.betTip == 0) {
       // init
-      player.hasTip -= this.round;
-      player.betTip += this.round;
+      player.hasTips -= this.round;
+      player.betTips += this.round;
     } else if (action === 'raise') {
       if (tip > this.getMaxRaise()) {
         return false; // invalid status
       }
-      player.hasTip -= tip;
-      player.betTip += tip;
+      player.hasTips -= tip;
+      player.betTips += tip;
     } else if (action === 'call') {
       // preBetTipを保持する？or UIで計算？
-      player.hasTip -= tip;
-      player.betTip += tip;
+      player.hasTips -= tip;
+      player.betTips += tip;
     } else if (action === 'check') {
       player.betStatus = 'fold';
-      let betEnd = true;
-      for (let i = 0; i < this.players.length; i++) {
-        if (this.players[i].betStatus != 'fold') {
-          betEnd = false;
-        }
+      if( this.players.every((player, i) => player.betStatus === 'fold') ) {
+        nextBet = false;
       }
-      if (betEnd) {
-        return false;
-      }  
     } else if (action === 'fold') {
       player.betStatus = 'fold';
-      return false;
+      nextBet = false;
     }
-    return true;
+    return nextBet;
   }
 
   getMaxRaise() {

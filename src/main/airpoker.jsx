@@ -2,35 +2,61 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import AirPoker from './airpoker.js';
-//require('./model/darai0512.js');
-import Model from './model/darai0512.js';
+import Model from './model/darai0512.js'; //require('./model/darai0512.js');
 
-var model = new Model();
-var airPoker = new AirPoker('You', model);
+let model = new Model();
+let setPlayers = [{name: 'You', options: {tip: 25, turn: 1}}, {name: model.name, options: {tip: 25, turn: 2}}];
+let airPoker = new AirPoker(setPlayers);
 
 var AirPokerUi = React.createClass({
   getInitialState: function() {
+    const airPoker = this.props.airPoker;
     return {
-      hand: this.props.airPoker.findCandidates('You'),
-      air: 25, // this.props.airPoker.getRemainingAir('You')
-      round: this.props.airPoker.round,
+      hand: airPoker.findCandidates('You'),
+      air: airPoker.getRemainingAir('You'),
+      round: airPoker.round,
       field: null, 
       phase: 'select', // or 'bet' or 'end' (or 'enter')
       win: null
     };
   },
   setField: function(card) {
-    let field = this.props.airPoker.setField('You', card);
+    const airPoker = this.props.airPoker;
+    const model = this.props.model;
+    let field = airPoker.setField('You', card);
+    field = airPoker.setField(model.name, model.select(airPoker.findCandidates(model.name), airPoker.remainingCardCandidates));
     this.setState({
       field: field,
-      hands: this.props.airPoker.findCandidates('You'),
+      hands: airPoker.findCandidates('You'),
       phase: 'bet'
     });
   },
+  bet: function(action, air) {
+    const airPoker = this.props.airPoker;
+    const model = this.props.model;
+    let nextBet = false;
+    if (airPoker.bet('You', action, air)) {
+      let bet = model.bet(action, airPoker.getRemainingAir(model.name), airPoker.getMaxRaise());
+      nextBet = airPoker.bet(model.name, bet.action, bet.tip);
+    }
+    if (nextBet) {
+      this.setState({
+        air: airPoker.getRemainingAir('You')
+      });
+    } else {
+      this.setState({
+        air: airPoker.getRemainingAir('You'),
+        phase: 'judge'
+      });
+    }  
+  },
   judge: function(card) {
+    const airPoker = this.props.airPoker;
+    const model = this.props.model;
     let result = this.props.airPoker.judge([{name: 'You', maxRankFlag: true}]);
     if (result) {
       this.setState({
+        field: null,
         win: result,
         phase: 'end'
       }); // true or false
@@ -133,6 +159,6 @@ var Bet = React.createClass({
   }
 });
 ReactDOM.render(
-  <AirPokerUi airPoker={airPoker} />,
+  <AirPokerUi airPoker={airPoker} model={model} />,
   document.getElementById('container')
 );

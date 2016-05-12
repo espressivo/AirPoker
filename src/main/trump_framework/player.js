@@ -7,8 +7,9 @@ export default class Player {
     this.name = name;
     // option params
     if (typeof options.tip == 'number' && options.tip > 0) {
-      this.hasTip = options.tip;
-      this.betTip = 0;
+      this.hasTips = options.tip;
+      this.betTips = 0;
+      this.betStatus = null;
     }
     if (typeof options.turn == 'number' && options.turn > 0) {
       this.turn = options.turn;
