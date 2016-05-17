@@ -22,20 +22,25 @@ const RANK_POINTS = {
 };
 
 export default class AirPocker extends Rule {
-  constructor(setPlayers) {
+  constructor(players) {
     // init
     const setDeck = {deckNum: 1, JockerNum: 0};
+    const setPlayers = [];
+    for (let i=0;i < players.length;i++) {
+      setPlayers.push({name: players[i], options: {hasTips: 25, betTips: 0, action: null, maxRankFlag: true}});
+    }
     super(setDeck, setPlayers);
 
     // member
+    this.betTurn = players;
     this.round = 1; // judge回数. judgeは手札がなくなるまで
     this.field = new Field(); // fieldの使い方は、poolとして、suitを計算する用途にする？
     this.remainingCardCandidates = this.deck.showRemains();
 
     // set hand
-    const handNum = Math.floor(this.remainingCardCandidates.length / 5 / setPlayers.length); // 5
-    for (let i = 0; i < setPlayers.length; i++) {
-      this.initHand(setPlayers[i].name, handNum);
+    const handNum = Math.floor(this.remainingCardCandidates.length / 5 / players.length); // 5
+    for (let i=0;i < players.length;i++) {
+      this.initHand(players[i], handNum);
     }
   }
 
@@ -137,6 +142,10 @@ export default class AirPocker extends Rule {
       totalTips += this.players[i].betTip;
     }
     return Math.floor(totalTips / playerNum);
+  }
+
+  changeBetTurn() {
+    this.betTurn.push(this.betTurn.shift());
   }
 
   /*****************************

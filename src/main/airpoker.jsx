@@ -5,8 +5,8 @@ import AirPoker from './airpoker.js';
 import Model from './model/darai0512.js'; //require('./model/darai0512.js');
 
 let model = new Model();
-let setPlayers = [{name: 'You', options: {tip: 25, turn: 1}}, {name: model.name, options: {tip: 25, turn: 2}}];
-let airPoker = new AirPoker(setPlayers);
+let players = ['You', model.name];
+let airPoker = new AirPoker(players);
 
 var AirPokerUi = React.createClass({
   getInitialState: function() {
@@ -15,7 +15,7 @@ var AirPokerUi = React.createClass({
       hand: airPoker.findCandidates('You'),
       air: airPoker.getRemainingAir('You'),
       round: airPoker.round,
-      field: null, 
+      field: null,
       phase: 'card', // or 'rank' or 'bet' or 'end' (or 'enter')
       win: null
     };
@@ -28,6 +28,14 @@ var AirPokerUi = React.createClass({
     this.setState({
       field: field,
       hands: airPoker.findCandidates('You'),
+      phase: 'rank'
+    });
+  },
+  setRankFlag: function(rankFlag) {
+    const airPoker = this.props.airPoker;
+    const model = this.props.model;
+    //airPoker.setRankFlag(rankFlag);
+    this.setState({
       phase: 'bet'
     });
   },
@@ -66,34 +74,56 @@ var AirPokerUi = React.createClass({
     }
   },
   render: function() {
-    let fieldNodes = () => {
+    let fieldNode = () => {
       if(this.state.field != null) {
         return (
           <Field field={this.state.field} airPoker={this.props.airPoker} />
         );
-      } else {
-        return (
-          <p>Select your card!</p>
-        );
       }
     };
     let keyPrefix = 1;
-    let yourCardNodes = this.state.hand.map(function(card) { // @todo Object.assign([], this.state.hand)が必要？
+    // @todo cardはchildrenに
+    let yourCardNode = this.state.hand.map(function(card) { // @todo Object.assign([], this.state.hand)が必要？
       return (
         <Card card={card} phase={this.state.phase} setField={this.setField} key={keyPrefix++ + '-' + card}/>
       );
     }, this);
-    let npcCardNodes = this.state.hand.map(function(card) {
+    let npcCardNode = this.state.hand.map(function(card) {
       card = '?';
       return (
         <Card card={card} key={keyPrefix++ + '-' + card}/>
       );
     }, this);
+    let guideNode = () => {
+      if(this.state.phase === 'card') {
+        return (
+          <p>Select your card!</p>
+        );
+      } else if (this.state.phase === 'rank') {
+        return (
+          <div className="rank">set
+            <Rank setRankFlag={this.setRankFlag}>Max</Rank>
+            <Rank setRankFlag={this.setRankFlag}>Missing</Rank>
+          Rank</div>
+        );
+      } else if (this.state.phase === 'bet') {
+        // 許されたactionのみ
+        return (
+          <div className="bet">set
+          <Bet bet={this.bet}>call</Bet>
+          <Bet bet={this.bet}>raise</Bet>
+          <Bet bet={this.bet}>check</Bet>
+          <Bet bet={this.bet}>fold</Bet>
+          </div>
+        );
+      }
+    };
     return (
       <div className="airPoker">
-        <div className="hand npc">{npcCardNodes}</div>
-        {fieldNodes()}
-        <div className="hand you">{yourCardNodes}</div>
+        <div className="hand npc">{npcCardNode}</div>
+        <div className="fields">{fieldNode()}</div>
+        <div className="hand you">{yourCardNode}</div>
+        {guideNode()}
       </div>
     );
   }
@@ -121,23 +151,14 @@ var Card = React.createClass({
   }
 });
 var Rank = React.createClass({
-  setField: function(e) {
+  setRankFlag: function(e) {
     e.preventDefault();
-    this.props.setField(this.props.card);
+    this.props.setRankFlag(this.props.children);
   },
   render: function() {
-    let cardNode = () => {
-      if (this.props.phase != 'card' || this.props.card === '?') {
-        return (
-          <span className="card">{this.props.card} </span>
-        );
-      } else {
-        return (
-          <button className="card" type="button" onClick={this.setField} onMouseOver={this.getMaxRankCombination}>{this.props.card}</button>
-        );
-      }
-    };
-    return cardNode();
+    return (
+      <button className="rank" type="button" onClick={this.setRankFlag}>{this.props.children}</button>
+    );
   }
 });
 var Field = React.createClass({
@@ -154,10 +175,10 @@ var Field = React.createClass({
   render: function() {
     //<div style={{width: 25px;border: 1px solid #000}}>{this.state.field[1].card}</div>
     return (
-        <div className="Field">
-          <div>{this.state.field[1].card}</div>
-          <div>{this.state.field[0].card}</div>
-        </div>
+      <div className="field">
+      <div>{this.state.field[1].card}</div>
+      <div>{this.state.field[0].card}</div>
+      </div>
     );
   }
 });
