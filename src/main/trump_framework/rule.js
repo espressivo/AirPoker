@@ -10,6 +10,7 @@ export default class Rule {
     this.deck = new Deck(setDeck);
     this.players = [];
     for (let i=0; i < setPlayers.length; i++) {
+      // @todo :array index order by bet turn
       let setPlayer = setPlayers[i];
       this.players[setPlayer.name] = new Player(setPlayer.name, setPlayer.options);
     }

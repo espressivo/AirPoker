@@ -16,7 +16,7 @@ var AirPokerUi = React.createClass({
       air: airPoker.getRemainingAir('You'),
       round: airPoker.round,
       field: null, 
-      phase: 'select', // or 'bet' or 'end' (or 'enter')
+      phase: 'card', // or 'rank' or 'bet' or 'end' (or 'enter')
       win: null
     };
   },
@@ -31,6 +31,7 @@ var AirPokerUi = React.createClass({
       phase: 'bet'
     });
   },
+  // required turn
   bet: function(action, air) {
     const airPoker = this.props.airPoker;
     const model = this.props.model;
@@ -76,38 +77,29 @@ var AirPokerUi = React.createClass({
         );
       }
     };
-    let hand = Object.assign([], this.state.hand);
-    // @todo NpcHandとHandを統一: cssを実装後
-    return (
-      <div className="airPoker">
-        <h1>AirPoker</h1>
-        <Hand hand={hand} player='npc' phase={this.state.phase} setField={this.setField} />
-        {fieldNodes()}
-        <Hand hand={hand} player='you' phase={this.state.phase} setField={this.setField} />
-      </div>
-    );
-  }
-});
-var Hand = React.createClass({
-  render: function() {
     let keyPrefix = 1;
-    let cardNodes = this.props.hand.map(function(card) {
-      if (this.props.player === 'npc') {
-        card = '?';
-      }
+    let yourCardNodes = this.state.hand.map(function(card) { // @todo Object.assign([], this.state.hand)が必要？
       return (
-        <Card card={card} phase={this.props.phase} setField={this.props.setField} key={keyPrefix++ + '-' + card}/>
+        <Card card={card} phase={this.state.phase} setField={this.setField} key={keyPrefix++ + '-' + card}/>
+      );
+    }, this);
+    let npcCardNodes = this.state.hand.map(function(card) {
+      card = '?';
+      return (
+        <Card card={card} key={keyPrefix++ + '-' + card}/>
       );
     }, this);
     return (
-      <div className="hand">
-        {cardNodes}
+      <div className="airPoker">
+        <div className="hand npc">{npcCardNodes}</div>
+        {fieldNodes()}
+        <div className="hand you">{yourCardNodes}</div>
       </div>
     );
   }
 });
 var Card = React.createClass({
-  maxRankCombination: function() {
+  getMaxRankCombination: function() {
   },
   setField: function(e) {
     e.preventDefault();
@@ -115,13 +107,33 @@ var Card = React.createClass({
   },
   render: function() {
     let cardNode = () => {
-      if (this.props.phase != 'select' || this.props.card === '?') {
+      if (this.props.phase != 'card' || this.props.card === '?') {
         return (
           <span className="card">{this.props.card} </span>
         );
       } else {
         return (
-          <button className="card" type="button" onClick={this.setField} onMouseOver={this.maxRankCombination}>{this.props.card}</button>
+          <button className="card" type="button" onClick={this.setField} onMouseOver={this.getMaxRankCombination}>{this.props.card}</button>
+        );
+      }
+    };
+    return cardNode();
+  }
+});
+var Rank = React.createClass({
+  setField: function(e) {
+    e.preventDefault();
+    this.props.setField(this.props.card);
+  },
+  render: function() {
+    let cardNode = () => {
+      if (this.props.phase != 'card' || this.props.card === '?') {
+        return (
+          <span className="card">{this.props.card} </span>
+        );
+      } else {
+        return (
+          <button className="card" type="button" onClick={this.setField} onMouseOver={this.getMaxRankCombination}>{this.props.card}</button>
         );
       }
     };

@@ -9,7 +9,7 @@ export default class Player {
     if (typeof options.tip == 'number' && options.tip > 0) {
       this.hasTips = options.tip;
       this.betTips = 0;
-      this.betStatus = null;
+      this.action = null;
     }
     if (typeof options.turn == 'number' && options.turn > 0) {
       this.turn = options.turn;

@@ -85,7 +85,6 @@ export default class AirPocker extends Rule {
    *   @return obj this.field
    */
   setField(playerName, card) {
-    // set your card
     this.field.set(playerName, this.players[playerName].send(card));
     return this.field.view();
   }
@@ -98,28 +97,35 @@ export default class AirPocker extends Rule {
   bet(playerName, action, tip) {
     let nextBet = true;
     const player = this.players[playerName];
-    if (player.betTip == 0) {
+    const preAction = player.action;
+    if (preAction == null && player.betTip == 0) {
       // init
       player.hasTips -= this.round;
       player.betTips += this.round;
-    } else if (action === 'raise') {
-      if (tip > this.getMaxRaise()) {
-        return false; // invalid status
-      }
-      player.hasTips -= tip;
-      player.betTips += tip;
-    } else if (action === 'call') {
-      // preBetTipを保持する？or UIで計算？
-      player.hasTips -= tip;
-      player.betTips += tip;
-    } else if (action === 'check') {
-      player.betStatus = 'fold';
-      if( this.players.every((player, i) => player.betStatus === 'fold') ) {
+    } else {
+      player.action = action;
+      if (action === 'raise') {
+        if (tip > this.getMaxRaise()) {
+          throw new Error('Not Allowed to put the value');
+        }
+        player.hasTips -= tip;
+        player.betTips += tip;
+      } else if (action === 'call') {
+        // preBetTipを保持する？or UIで計算？
+        player.hasTips -= tip;
+        player.betTips += tip;
+      } else if (action === 'check') {
+        if (preAction == 'check') {
+          throw new Error('Not Allowed to put the value');
+        }
+        if( this.players.every((player, i) => player.action === 'fold') ) {
+          nextBet = false;
+        }
+      } else if (action === 'fold') {
         nextBet = false;
+      } else {
+        throw new Error('Not Allowed to put the value');
       }
-    } else if (action === 'fold') {
-      player.betStatus = 'fold';
-      nextBet = false;
     }
     return nextBet;
   }
@@ -171,6 +177,7 @@ export default class AirPocker extends Rule {
       }
       // delete cards from sideField
     }
+    // disaster: まずはSuitをずらせないかcheck
     //if (!win_()) {this.filed.trash();}
     let trashCards = this.field.return();
     for (let j=0;j < trashCards.length;j++) {
@@ -220,6 +227,8 @@ export default class AirPocker extends Rule {
    *   @return obj rank = {name: str, point: int}
    *****************************/
   rank_(cards) {
+    rankByNumbers_();
+    getSuits();
     let rank = this.isFlash_(cards) ? {name: 'Flush'} : {};
   }
 
@@ -297,6 +306,17 @@ export default class AirPocker extends Rule {
       rank.point += highest;
     }
     return rank;
+  }
+
+  getSuits_(cards, rank, remainingCards) {
+    if (rank === 'HighCard' || rank === 'Straight' || rank === 'RoyalStraight') {
+      // Suitsの上から順に消費する
+      if (getFlash_()) {
+      }
+    } else {
+      // Suitsの上から順に消費する
+    }
+    return cards;
   }
 
   isFlash_(cards) {
