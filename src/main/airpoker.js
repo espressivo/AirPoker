@@ -94,6 +94,10 @@ export default class AirPocker extends Rule {
     return this.field.view();
   }
 
+  actionCandidates(playerName) {
+    
+  }
+
   /*****************************
    * bet
    *   @param
@@ -116,9 +120,11 @@ export default class AirPocker extends Rule {
         player.hasTips -= tip;
         player.betTips += tip;
       } else if (action === 'call') {
-        // preBetTipを保持する？or UIで計算？
-        player.hasTips -= tip;
-        player.betTips += tip;
+        const opponent = this.betTurn.indexOf(playerName) - 1 > -1
+                       ? this.players[this.betTurn[this.betTurn.indexOf(playerName) - 1]]
+                       : this.players[this.betTurn[this.betTurn.length - 1]];
+        player.hasTips -= opponent.betTips - player.betTips;
+        player.betTips = opponent.betTips;
       } else if (action === 'check') {
         if (preAction == 'check') {
           throw new Error('Not Allowed to put the value');

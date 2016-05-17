@@ -1,11 +1,15 @@
 'use strict';
-export default class Model {
+import ModelInterface from './airpokermodel.js'
+
+export default class Model extends ModelInterface {
   constructor() {
-    // init
-    this.name = 'darai0512';
+    super('darai0512');
   }
-  select(hands, remainingCardCandidates) {
+  setCard(hands, remainingCardCandidates) {
     return hands[0];
+  }
+  rankFlag() {
+    return true;
   }
   bet(preAction, myTips, maxRaise) {
     let bet = {'action': null, tip: 0};

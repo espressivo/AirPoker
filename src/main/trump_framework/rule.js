@@ -45,6 +45,7 @@ export default class Rule {
     throw new Error('Implement me');
   }
 
+  // not required??
   bet(playerName, action, tip) {
     throw new Error('Implement me');
   }

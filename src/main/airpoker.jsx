@@ -20,21 +20,29 @@ var AirPokerUi = React.createClass({
       win: null
     };
   },
-  setField: function(card) {
+  componentDidMount() {
+
+  },
+  shouldComponentUpdate: function(nextProps, nextState) {
+    if (nextState.phase === 'bet') {
+
+    }
+  },
+  setCard: function(card) {
     const airPoker = this.props.airPoker;
     const model = this.props.model;
     let field = airPoker.setField('You', card);
-    field = airPoker.setField(model.name, model.select(airPoker.findCandidates(model.name), airPoker.remainingCardCandidates));
+    field = airPoker.setCard(model.name, model.setCard(airPoker.findCandidates(model.name), airPoker.remainingCardCandidates));
     this.setState({
       field: field,
       hands: airPoker.findCandidates('You'),
       phase: 'rank'
     });
   },
-  setRankFlag: function(rankFlag) {
+  rankFlag: function(rankFlag) {
     const airPoker = this.props.airPoker;
     const model = this.props.model;
-    //airPoker.setRankFlag(rankFlag);
+    //airPoker.rankFlag(rankFlag);
     this.setState({
       phase: 'bet'
     });
@@ -53,25 +61,17 @@ var AirPokerUi = React.createClass({
         air: airPoker.getRemainingAir('You')
       });
     } else {
-      this.setState({
-        air: airPoker.getRemainingAir('You'),
-        phase: 'judge'
-      });
-    }  
-  },
-  judge: function(card) {
-    const airPoker = this.props.airPoker;
-    const model = this.props.model;
-    let result = this.props.airPoker.judge([{name: 'You', maxRankFlag: true}]);
-    if (result) {
-      this.setState({
+      let result = this.props.airPoker.judge([{name: 'You', maxRankFlag: true}]);
+      let nextState = {
         field: null,
-        win: result,
-        phase: 'end'
-      }); // true or false
-    } else {
-      this.setState({field: null});
-    }
+        air: airPoker.getRemainingAir('You'),
+      };
+      if (result) {
+        nextState.win = result;
+        nextState.phase = 'end';
+      }
+      this.setState(nextState);
+    }  
   },
   render: function() {
     let fieldNode = () => {
@@ -85,7 +85,7 @@ var AirPokerUi = React.createClass({
     // @todo cardはchildrenに
     let yourCardNode = this.state.hand.map(function(card) { // @todo Object.assign([], this.state.hand)が必要？
       return (
-        <Card card={card} phase={this.state.phase} setField={this.setField} key={keyPrefix++ + '-' + card}/>
+        <Card card={card} phase={this.state.phase} setCard={this.setCard} key={keyPrefix++ + '-' + card}/>
       );
     }, this);
     let npcCardNode = this.state.hand.map(function(card) {
@@ -102,8 +102,8 @@ var AirPokerUi = React.createClass({
       } else if (this.state.phase === 'rank') {
         return (
           <div className="rank">set
-            <Rank setRankFlag={this.setRankFlag}>Max</Rank>
-            <Rank setRankFlag={this.setRankFlag}>Missing</Rank>
+            <Rank rankFlag={this.rankFlag}>Max</Rank>
+            <Rank rankFlag={this.rankFlag}>Missing</Rank>
           Rank</div>
         );
       } else if (this.state.phase === 'bet') {
@@ -131,9 +131,9 @@ var AirPokerUi = React.createClass({
 var Card = React.createClass({
   getMaxRankCombination: function() {
   },
-  setField: function(e) {
+  setCard: function(e) {
     e.preventDefault();
-    this.props.setField(this.props.card);
+    this.props.setCard(this.props.card);
   },
   render: function() {
     let cardNode = () => {
@@ -143,7 +143,7 @@ var Card = React.createClass({
         );
       } else {
         return (
-          <button className="card" type="button" onClick={this.setField} onMouseOver={this.getMaxRankCombination}>{this.props.card}</button>
+          <button className="card" type="button" onClick={this.setCard} onMouseOver={this.getMaxRankCombination}>{this.props.card}</button>
         );
       }
     };
@@ -151,13 +151,13 @@ var Card = React.createClass({
   }
 });
 var Rank = React.createClass({
-  setRankFlag: function(e) {
+  rankFlag: function(e) {
     e.preventDefault();
-    this.props.setRankFlag(this.props.children);
+    this.props.rankFlag(this.props.children);
   },
   render: function() {
     return (
-      <button className="rank" type="button" onClick={this.setRankFlag}>{this.props.children}</button>
+      <button className="rank" type="button" onClick={this.rankFlag}>{this.props.children}</button>
     );
   }
 });
