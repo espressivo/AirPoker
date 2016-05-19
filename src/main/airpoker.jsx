@@ -17,7 +17,8 @@ var AirPokerUi = React.createClass({
       round: airPoker.round,
       field: null,
       phase: 'card', // or 'rank' or 'bet' or 'end' (or 'enter')
-      win: null
+      roundWinner: null,
+      gameWinner: null
     };
   },
   componentDidMount() {
@@ -25,7 +26,11 @@ var AirPokerUi = React.createClass({
   },
   shouldComponentUpdate: function(nextProps, nextState) {
     if (nextState.phase === 'bet') {
-
+      let betPlayer;
+      for (let i=0;i < airPoker.betTurn.length;i++) {
+        betPlayer = airPoker.betTurn[i];
+        if (betPlayer != 'You') {}
+      }
     }
   },
   setCard: function(card) {
@@ -61,7 +66,8 @@ var AirPokerUi = React.createClass({
         air: airPoker.getRemainingAir('You')
       });
     } else {
-      let result = this.props.airPoker.judge([{name: 'You', maxRankFlag: true}]);
+      let result = airPoker.judge([{name: 'You', maxRankFlag: true}]);
+      airPoker.changeTurn();
       let nextState = {
         field: null,
         air: airPoker.getRemainingAir('You'),

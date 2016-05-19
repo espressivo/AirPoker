@@ -6,18 +6,15 @@ export default class Model extends ModelInterface {
     super('darai0512');
   }
   setCard(hands, remainingCardCandidates) {
-    return hands[0];
+    this.card_ = hands[0];
+    return this.card_;
   }
-  rankFlag() {
-    return true;
-  }
-  bet(preAction, myTips, maxRaise) {
-    let bet = {'action': null, tip: 0};
-    if (preAction == null || preAction === 'check') {
-      bet.action = 'check';
+  bet(oCard, oAction, oBetTips, oHasTips, hasTips) {
+    if (oAction == null || oAction === 'check') {
+      bet.action_ = 'check';
     } else {
-      bet.action = 'call';
+      bet.action_ = 'call';
     }
-    return bet;
+    return {action: this.action_, tip: this.betTips_};
   }
 }
