@@ -51,10 +51,10 @@ export default class Rule {
   }
 
   judge() {
-    throw new Error('Implement me using win_()');
+    throw new Error('Implement me');
   }
 
-  win_() {
+  gameset() {
     throw new Error('Implement me');
   }
 }
