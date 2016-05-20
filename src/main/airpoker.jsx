@@ -131,10 +131,10 @@ var AirPokerUi = React.createClass({
         );
       } else if (this.state.phase === 'rank') {
         return (
-          <div className="rank">set
+          <div className="rank">set&nbsp;
             <Rank rankFlag={this.rankFlag}>Max</Rank>
             <Rank rankFlag={this.rankFlag}>Missing</Rank>
-          Rank</div>
+          &nbsp;Rank</div>
         );
       } else if (this.state.phase === 'bet') {
         return this.props.airPoker.actionCandidates('You').map(function(action) {
@@ -148,17 +148,13 @@ var AirPokerUi = React.createClass({
     };
     return (
       <div className="airPoker">
-        <div className="bet npc">NPC Air: {this.state.status[model.name].remainingAir}, Bet: {this.state.status[model.name].betAir}, Action: {this.state.status[model.name].action}</div>
+        <div className="description status npc">NPC remaining Air: {this.state.status[model.name].remainingAir}, Bet Air: {this.state.status[model.name].betAir}, Action: {this.state.status[model.name].action || " -"}</div>
         <div className="hand npc">{npcCardNode}</div>
-        <div className="field npc">
-          <button className="card" disabled>{this.state.field[model.name]}</button>
-        </div>
-        {guideNode()}
-        <div className="field you">
-          <button className="card" disabled>{this.state.field['You']}</button>
-        </div>
+        <button className={this.state.phase === 'card' ? "field" : "field card"} disabled>{this.state.field[model.name]}</button>
+          <div className="description">{guideNode()}</div>
+        <button className={this.state.phase === 'card' ? "field" : "field card"} disabled>{this.state.field['You']}</button>
         <div className="hand you">{yourCardNode}</div>
-        <div className="bet you">Your Air: {this.state.status['You'].remainingAir}, Bet: {this.state.status['You'].betAir}, Action: {this.state.status['You'].action}</div>
+        <div className="description status you">Your remaining Air: {this.state.status['You'].remainingAir}, Bet Air: {this.state.status['You'].betAir}, Action: {this.state.status['You'].action || " -"}</div>
       </div>
     );
   }
@@ -192,7 +188,7 @@ var Rank = React.createClass({
   },
   render: function() {
     return (
-      <button className="rank" type="button" onClick={this.rankFlag}>{this.props.children}</button>
+      <button className="rank button" type="button" onClick={this.rankFlag}>{this.props.children}</button>
     );
   }
 });
@@ -203,7 +199,7 @@ var Bet = React.createClass({
   },
   render: function() {                      
     return (
-      <button className="bet" type="button" onClick={this.bet}>{this.props.children}</button>
+      <button className="bet button" type="button" onClick={this.bet}>{this.props.children}</button>
     );
   }
 });

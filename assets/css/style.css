@@ -1,78 +1,47 @@
 @charset "UTF-8";
+:focus {outline:none !important;}
+::-moz-focus-inner {border:0 !important;}
+
 body {
-    font-family: "ヒラギノ角ゴ Pro W3", "Hiragino Kaku Gothic Pro", Meiryo, "メイリオ", "ＭＳ Ｐゴシック", Verdana, Geneva, Arial, Helvetica;
+    font-family: 'Bubbler One', serif;
     word-wrap: break-word;
     word-break: break-all;
     background-color: #59AAE2;
 }
-.footer {
-    text-align: center;
-    padding: 12px 0;
-    font-size: 0.8rem;
-    bottom: 0;
-    right: auto;
-}
-/*
-To change this license header, choose License Headers in Project Properties.
-To change this template file, choose Tools | Templates
-and open the template in the editor.
-*/
-/*
-    Created on : Feb 23, 2015, 2:14:38 PM
-    Author     : Erik Nijenhuis <erik@xerdi.com>
-*/
 
-:focus {outline:none !important;}
-::-moz-focus-inner {border:0 !important;}
-
-@keyframes flip-in {
-    from {transform: rotateY(-90deg);-webkit-transform: rotateY(-90deg);}
-    to {transform: rotateY(0deg);-webkit-transform: rotateY(0deg);}
-}
-@-webkit-keyframes flip-in {
-    from {transform: rotateY(-90deg);-webkit-transform: rotateY(-90deg);}
-    to {transform: rotateY(0deg);-webkit-transform: rotateY(0deg);}
-}
-@keyframes flip-out {
-    from {transform: rotateY(0deg);-webkit-transform: rotateY(0deg);}
-    to {transform: rotateY(90deg);-webkit-transform: rotateY(90deg);}
-}
-@-webkit-keyframes flip-out {
-    from {transform: rotateY(0deg);-webkit-transform: rotateY(0deg);}
-    to {transform: rotateY(90deg);-webkit-transform: rotateY(90deg);}
-}
-@keyframes soften {
-    from {opacity: 1;-webkit-opacity: 1;}
-}
-@-webkit-keyframes soften {
-    from {opacity: 1;-webkit-opacity: 1;}
+.description {
+    padding-left: 150px;
+    font-size: 20px;
 }
 
-div.flip-card {
-    transition: transform 1s;
-    display: none;
-}
-div.active-card {
-    display: block;
-    transform: rotateY(0deg);
-}
-div.flip-in {
-    animation: flip-in 1s ease-out;
-    -webkit-animation: flip-in 1s;
-}
-div.flip-out {
-    animation: flip-out 1s ease-in;
-    -webkit-animation: flip-out 1s;
+.description.status {
+    padding-left: 60px;
 }
 
-.card {
+.field {
     width: 100px;
-    height: 150px;
+    height: 140px;
+    left: 200px;
     overflow: hidden;
     position: relative;
     border-radius: 3px 3px 0 0;
     transition: opacity 0.2s;
+    font-size: 60px;
+    font-weight: lighter;
     -webkit-transition: opacity 0.2s;
+}
+
+.card {
+    width: 100px;
+    height: 140px;
+    overflow: hidden;
+    position: relative;
+    border-radius: 3px 3px 0 0;
+    transition: opacity 0.2s;
+    font-size: 60px;
+    font-weight: lighter;
+    -webkit-transition: opacity 0.2s;
+    background-image: linear-gradient(to top left, #F7DE05, #DA8E00, #EDAC06, #F7DE05, #ECB802, #DAAF08, #B67B03);
 }
 
 .card.able:hover {
@@ -81,32 +50,26 @@ div.flip-out {
     cursor: pointer;
 }
 
-.card h6 {
-    display: block;
-    position: relative;
+.button {
+    display: inline-block;
+    width: 80px;
+    padding: 5px;
+    border-radius: 4px;
+    background-color: #ffff4f;
+    text-decoration: none;
+    letter-spacing: 1px;
+    font-size: 1rem;
+    margin: 5px;
+}
+
+.button:hover {
+    opacity: 0.7;
+}
+
+.footer {
     text-align: center;
-    margin-top: 50px;
-    font-size: 16em;
-}
-
-.card img {
-    position:absolute;
-    left: -100%;
-    right: -100%;
-    top: -100%;
-    bottom: -100%;
-    margin: auto;
-    min-height: 100%;
-    min-width: 100%;
-}
-
-.full-card {
-    position: relative;
-    transition: all 1.2s;
-}
-
-.full-card .btn-fab {
-    float: right;
-    margin-top: -28px;
-    margin-right: 14px;
+    padding: 12px 0;
+    font-size: 0.8rem;
+    bottom: 0;
+    right: auto;
 }
