@@ -6,28 +6,30 @@ import Player from './player.js';
  */
 export default class Rule {
   // setPlayers' order decide player's turn
-  constructor(setDeck, setPlayers) {
-    this.deck = new Deck(setDeck);
-    this.players = [];
+  constructor(setDeck, setPlayers, initHandNum) {
+    this.deck_ = new Deck(setDeck);
+    this.players_ = [];
     for (let i=0; i < setPlayers.length; i++) {
       // @todo :array index order by bet turn
       let setPlayer = setPlayers[i];
-      this.players[setPlayer.name] = new Player(setPlayer.name, setPlayer.options);
+      this.players_[setPlayer.name] = new Player(setPlayer.name, setPlayer.options);
+      this.initHand_(setPlayer.name, initHandNum);
     }
   }
 
   /**
-   * initHand
+   * initHand_
    *   Deals out <initNum> cards to each player.
    *
    *   @param  str playerName
    *   @param  int initHandNum
    */
-  initHand(playerName, initHandNum) {
-    if (initHandNum <= 0) {return;}
-    for (let j = 0; j < initHandNum; j++) {
-      this.players[playerName].receive(this.deck.draw());
-    }
+  initHand_(playerName, initHandNum) {
+    if (initHandNum > 0) {
+      for (let j = 0; j < initHandNum; j++) {
+        this.players_[playerName].receive(this.deck_.draw());
+      }
+    }  
   }
 
   /**

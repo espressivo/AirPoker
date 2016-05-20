@@ -1,11 +1,11 @@
 // UI
-import React from 'react';
-import ReactDOM from 'react-dom';
+var React = require('react');
+var ReactDOM = require('react-dom');
 import AirPoker from './airpoker.js';
 import Model from './model/darai0512.js'; //require('./model/darai0512.js');
 
 let model = new Model();
-let players = ['You', model.name];
+const players = ['You', model.name];
 let airPoker = new AirPoker(players);
 
 var AirPokerUi = React.createClass({
@@ -13,97 +13,121 @@ var AirPokerUi = React.createClass({
     const airPoker = this.props.airPoker;
     return {
       hand: airPoker.findCandidates('You'),
-      air: airPoker.getRemainingAir('You'),
+      status: airPoker.getStatus(),
       round: airPoker.round,
-      field: null,
+      field: airPoker.field,
       phase: 'card', // or 'rank' or 'bet' or 'end' (or 'enter')
-      roundWinner: null,
-      gameWinner: null
+      result: {winner: null, rank: null, cards: null} // round winner or game winner
     };
   },
   componentDidMount() {
-
+    // timer
   },
   shouldComponentUpdate: function(nextProps, nextState) {
-    if (nextState.phase === 'bet') {
-      let betPlayer;
-      for (let i=0;i < airPoker.betTurn.length;i++) {
-        betPlayer = airPoker.betTurn[i];
-        if (betPlayer != 'You') {}
+    Object.keys(nextState.status).forEach((player) => {
+      if (nextState.status[player].remainingAir < 0) { // @todo 多人数対応
+        nextState.phase = 'end';
+        nextState.result.winner = this.props.airPoker.prePlayer(player);
       }
-    }
+    });
+    return true;
   },
   setCard: function(card) {
     const airPoker = this.props.airPoker;
     const model = this.props.model;
-    let field = airPoker.setField('You', card);
-    field = airPoker.setCard(model.name, model.setCard(airPoker.findCandidates(model.name), airPoker.remainingCardCandidates));
+    airPoker.setField('You', card);
+    airPoker.setField(model.name, model.setCard(airPoker.findCandidates(model.name), airPoker.remainingCards));
     this.setState({
-      field: field,
-      hands: airPoker.findCandidates('You'),
+      field: airPoker.field,
+      hand: airPoker.findCandidates('You'),
       phase: 'rank'
     });
   },
   rankFlag: function(rankFlag) {
     const airPoker = this.props.airPoker;
-    const model = this.props.model;
-    //airPoker.rankFlag(rankFlag);
+    airPoker.setRankFlag('You', rankFlag);
+    airPoker.setRankFlag(this.props.model.name, this.props.model.rankFlag);
+    // exec first betting
+    airPoker.preBet();
+    for (let i=0;i < airPoker.betTurn.length;i++) {
+      let betPlayer = airPoker.betTurn[i];
+      if (betPlayer === 'You') {
+        break;
+      } else {
+        let prePlayer = airPoker.prePlayer(betPlayer);
+        let status = airPoker.getStatus();
+        let bet = this.props.model.bet(airPoker.field[prePlayer]
+                                      ,status[prePlayer].action
+                                      ,status[prePlayer].betAir
+                                      ,status[prePlayer].remainingAir
+                                      ,status[betPlayer].remainingAir );
+        if (!airPoker.actionCandidates(betPlayer).includes(bet.action)) {
+          bet.action = 'check';
+        }
+        airPoker.bet(betPlayer, bet.action, bet.tip);
+      }
+    }
     this.setState({
-      phase: 'bet'
+      phase: 'bet',
+      status: airPoker.getStatus()
     });
   },
-  // required turn
-  bet: function(action, air) {
+  bet: function(action, air) { // about only 'Your' bet
     const airPoker = this.props.airPoker;
-    const model = this.props.model;
+    if (action ==='raise') { air = airPoker.getMaxRaise(); } //@todo 4 raiseでのtip数を選択できるように
     let nextBet = false;
     if (airPoker.bet('You', action, air)) {
-      let bet = model.bet(action, airPoker.getRemainingAir(model.name), airPoker.getMaxRaise());
-      nextBet = airPoker.bet(model.name, bet.action, bet.tip);
+      let nextNPC = airPoker.betTurn.indexOf('You')+1 === airPoker.betTurn.length ? airPoker.betTurn[0] : airPoker.betTurn[airPoker.betTurn.indexOf('You')+1];
+      let status = airPoker.getStatus();
+      let bet = this.props.model.bet(airPoker.field['You'] // @todo multi player?
+          ,action
+          ,status['You'].betAir
+          ,status['You'].remainingAir
+          ,status[nextNPC].remainingAir );
+      if (!airPoker.actionCandidates(nextNPC).includes(bet.action)) {
+        bet.action = 'fold';
+      }
+      nextBet = airPoker.bet(nextNPC, bet.action, bet.tip);
     }
     if (nextBet) {
       this.setState({
-        air: airPoker.getRemainingAir('You')
+        status: airPoker.getStatus()
       });
     } else {
-      let result = airPoker.judge([{name: 'You', maxRankFlag: true}]);
-      airPoker.changeTurn();
-      let nextState = {
-        field: null,
-        air: airPoker.getRemainingAir('You'),
-      };
-      if (result) {
-        nextState.win = result;
-        nextState.phase = 'end';
-      }
-      this.setState(nextState);
-    }  
+      this.setState({
+        result: airPoker.judge(),
+        field: airPoker.field,
+        status: airPoker.getStatus(),
+        phase: 'card',
+        round: airPoker.round
+      });
+    }
   },
   render: function() {
-    let fieldNode = () => {
-      if(this.state.field != null) {
-        return (
-          <Field field={this.state.field} airPoker={this.props.airPoker} />
-        );
-      }
-    };
-    let keyPrefix = 1;
-    // @todo cardはchildrenに
-    let yourCardNode = this.state.hand.map(function(card) { // @todo Object.assign([], this.state.hand)が必要？
+    const model = this.props.model;
+    let yourCardNode = this.state.hand.map(function(card, i) { // @todo 要Object.assign([], this.state.hand)？/cardはchildrenに
       return (
-        <Card card={card} phase={this.state.phase} setCard={this.setCard} key={keyPrefix++ + '-' + card}/>
+        <Card card={card} phase={this.state.phase} setCard={this.setCard} key={i + '-' + card}/>
       );
     }, this);
-    let npcCardNode = this.state.hand.map(function(card) {
+    let npcCardNode = this.state.hand.map(function(card, i) {
       card = '?';
       return (
-        <Card card={card} key={keyPrefix++ + '-' + card}/>
+        <Card card={card} key={i + '-' + card}/>
       );
     }, this);
     let guideNode = () => {
       if(this.state.phase === 'card') {
+        let guide = 'Select your card!';
+        if (this.state.result.winner === 'You') {
+          guide = 'Round' + --this.state.round + ': You Win! Rank=' + this.state.result.rank;
+        } else if (this.state.result.winner != null) {
+          guide = 'Round' + --this.state.round + ': You Lose...NPC Rank=' + this.state.result.rank;
+        } else if (this.state.round > 1) {
+          guide = 'Round' + --this.state.round + ': Draw';
+        }
         return (
-          <p>Select your card!</p>
+          <p>{guide}</p>
         );
       } else if (this.state.phase === 'rank') {
         return (
@@ -113,23 +137,28 @@ var AirPokerUi = React.createClass({
           Rank</div>
         );
       } else if (this.state.phase === 'bet') {
-        // 許されたactionのみ
-        return (
-          <div className="bet">set
-          <Bet bet={this.bet}>call</Bet>
-          <Bet bet={this.bet}>raise</Bet>
-          <Bet bet={this.bet}>check</Bet>
-          <Bet bet={this.bet}>fold</Bet>
-          </div>
-        );
+        return this.props.airPoker.actionCandidates('You').map(function(action) {
+          return (
+            <Bet bet={this.bet} key={action}>{action}</Bet>
+          );
+        }, this);
+      } else if (this.state.phase === 'end') {
+        return (<p>Game Set! Winner: {this.state.result.winner}</p>);
       }
     };
     return (
       <div className="airPoker">
+        <div className="bet npc">NPC Air: {this.state.status[model.name].remainingAir}, Bet: {this.state.status[model.name].betAir}, Action: {this.state.status[model.name].action}</div>
         <div className="hand npc">{npcCardNode}</div>
-        <div className="fields">{fieldNode()}</div>
-        <div className="hand you">{yourCardNode}</div>
+        <div className="field npc">
+          <button className="card" disabled>{this.state.field[model.name]}</button>
+        </div>
         {guideNode()}
+        <div className="field you">
+          <button className="card" disabled>{this.state.field['You']}</button>
+        </div>
+        <div className="hand you">{yourCardNode}</div>
+        <div className="bet you">Your Air: {this.state.status['You'].remainingAir}, Bet: {this.state.status['You'].betAir}, Action: {this.state.status['You'].action}</div>
       </div>
     );
   }
@@ -145,11 +174,11 @@ var Card = React.createClass({
     let cardNode = () => {
       if (this.props.phase != 'card' || this.props.card === '?') {
         return (
-          <span className="card">{this.props.card} </span>
+          <button className="card" disabled>{this.props.card} </button>
         );
       } else {
         return (
-          <button className="card" type="button" onClick={this.setCard} onMouseOver={this.getMaxRankCombination}>{this.props.card}</button>
+          <button className="card able" type="button" onClick={this.setCard} onMouseOver={this.getMaxRankCombination}>{this.props.card}</button>
         );
       }
     };
@@ -159,7 +188,7 @@ var Card = React.createClass({
 var Rank = React.createClass({
   rankFlag: function(e) {
     e.preventDefault();
-    this.props.rankFlag(this.props.children);
+    this.props.rankFlag(this.props.children == 'Max');
   },
   render: function() {
     return (
@@ -167,33 +196,14 @@ var Rank = React.createClass({
     );
   }
 });
-var Field = React.createClass({
-  getInitialState: function() {
-    return {
-      field: this.props.field
-    };
-  },
-  componentWillReceiveProps: function(nextProps) {
-    this.setState({
-      field : nextProps.field
-    });
-  },
-  render: function() {
-    //<div style={{width: 25px;border: 1px solid #000}}>{this.state.field[1].card}</div>
-    return (
-      <div className="field">
-      <div>{this.state.field[1].card}</div>
-      <div>{this.state.field[0].card}</div>
-      </div>
-    );
-  }
-});
 var Bet = React.createClass({
-  render: function() {
-    //this.props.airPoker.bet('You', 1);
+  bet: function(e) {
+    e.preventDefault();
+    this.props.bet(this.props.children, 0); // @todo 4 raiseでのtip数を選択できるように
+  },
+  render: function() {                      
     return (
-      <div className="betModal">
-      </div>
+      <button className="bet" type="button" onClick={this.bet}>{this.props.children}</button>
     );
   }
 });

@@ -9,7 +9,7 @@ var sass = require('gulp-sass');
  
 gulp.task('browserify', function() {
   browserify('./src/main/airpoker.jsx', { debug: true })
-    .transform(babelify)
+    .transform(babelify, {presets: ["react", "es2016"]})
     .bundle()
     .on("error", function (err) { console.log("Error : " + err.message); })
     .pipe(toVinylObjOf('bundle.min.js'))
@@ -22,7 +22,7 @@ gulp.task('browserify', function() {
 gulp.task('sass', function() {
   gulp.src("assets/scss/*.scss")
     .pipe(sass())
-    .pipe(gulp.dest("./css"));
+    .pipe(gulp.dest("assets/css"));
 });
 
 gulp.task('watch', function() {

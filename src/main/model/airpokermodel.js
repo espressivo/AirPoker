@@ -8,7 +8,7 @@ export default class ModelInterface {
     this.action_ = 'check'; // 'raise', 'call', 'fold'
     this.betTips_ = 0;
   }
-  setCard(hands, remainingCardCandidates, hasTips) {
+  setCard(hands, remainingCards, hasTips) {
     throw new Error('Implement me. Please set card & rankFlag.');
     return this.card_;
   }

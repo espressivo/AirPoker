@@ -1,6 +1,5 @@
 'use strict';
 import Rule from './trump_framework/rule.js';
-import Field from './trump_framework/field.js';
 
 /*
  * YourPoint = RankPoint + HighCard (+ SuitOrder <- in the future)
@@ -26,48 +25,41 @@ export default class AirPocker extends Rule {
     // init
     const setDeck = {deckNum: 1, JockerNum: 0};
     const setPlayers = [];
+    let field = {};
     for (let i=0;i < players.length;i++) {
       setPlayers.push({name: players[i], options: {hasTips: 25, betTips: 0, action: null, maxRankFlag: true}});
+      field[players[i]] = null;
     }
-    super(setDeck, setPlayers);
+    const initHandNum = Math.floor((setDeck.deckNum * 52 + setDeck.JockerNum) / 5 / players.length); // 5
+    super(setDeck, setPlayers, initHandNum);
 
     // member
     this.betTurn = players;
     this.round = 1; // judge回数. judgeは手札がなくなるまで
-    this.field = new Field(); // fieldの使い方は、poolとして、suitを計算する用途にする？
-    this.remainingCardCandidates = this.deck.showRemains();
-
-    // set hand
-    const handNum = Math.floor(this.remainingCardCandidates.length / 5 / players.length); // 5
-    for (let i=0;i < players.length;i++) {
-      this.initHand(players[i], handNum);
-    }
+    this.field = field; // field.jsは煩雑さ回避のため使わない方針に変更
+    this.remainingCards = this.deck_.showRemains();
   }
 
   /*
-   * initHand
+   * initHand_
    *   @override
    *   Sums up five card numbers.
    *
    *   @param str playerName
    *   @param int initHandNum
    */
-  initHand(playerName, initHandNum) {
+  initHand_(playerName, initHandNum) {
     for (let j = 0; j < initHandNum; j++) {
       let sumup = 0;
       // Sums up five card numbers.
       for (let x = 0; x < 5; x++) {
-        let card = this.deck.draw();
+        let card = this.deck_.draw();
         sumup += Number(card.number);
       }
-      this.players[playerName].receive(sumup);
+      this.players_[playerName].receive(sumup);
     }
   }
 
-  getRemainingAir(playerName) {
-    return this.players[playerName].hasTips;
-  }
-  
   /**
    * findCandidates
    *   Finds cards to be able to put on the table from Player's hand and Table.
@@ -76,82 +68,130 @@ export default class AirPocker extends Rule {
    *   @return arr candidates
    */
   findCandidates(playerName) {
-    return this.players[playerName].viewHand();
+    return this.players_[playerName].viewHand();
+  }
+
+  /**
+   * getStatus
+   *   Gets players' bet status
+   *
+   *   @return obj status
+   */
+  getStatus() {
+    let status = {};
+    Object.keys(this.players_).forEach((name) => {
+      status[name] = { remainingAir: this.players_[name].hasTips
+        ,betAir: this.players_[name].betTips
+        ,action: this.players_[name].action };
+    });
+    return status;
   }
 
   /*
    * setField
    *   @override
    *   Sets card to field.
-   *   @todo player数が3人以上の時に対応していない
    *
    *   @param  str playerName
    *   @param  int card
-   *   @return obj this.field
    */
   setField(playerName, card) {
-    this.field.set(playerName, this.players[playerName].send(card));
-    return this.field.view();
+    this.field[playerName] = this.players_[playerName].send(card);
   }
 
+  /*
+   * setRankFlag
+   *   sets maxRankFlag
+   *
+   *   @param  str playerName
+   *   @param  boolean rankFlag
+   */
+  setRankFlag(playerName, rankFlag) {
+    this.players_[playerName].maxRankFlag = rankFlag;
+  }
+
+  preBet() {
+    let player;
+    //Object.values(this.players_).forEach((player) => {
+    Object.keys(this.players_).forEach((name) => {
+      player = this.players_[name];
+      player.hasTips -= this.round;
+      player.betTips += this.round;
+      player.action = null;
+    });
+  }
+
+  prePlayer(playerName) {
+    let index = this.betTurn.indexOf(playerName);
+    return index > 0 ? this.betTurn[index - 1] : this.betTurn[this.betTurn.length - 1];
+  }
+  
+  /*****************************
+   * actionCandidates
+   *   @param  str playerName
+   *   @return arr actions
+   *****************************/
   actionCandidates(playerName) {
-    
+    let actions = ['raise', 'call', 'check', 'fold'];
+    let status = this.getStatus();
+    let prePlayer = this.prePlayer(playerName);
+    if (status[playerName].action == 'check' || status[prePlayer].action == 'raise') {
+      actions.splice(actions.indexOf('check'),1);
+    } else if (status[playerName].action == null && status[prePlayer].action == null) {
+      actions.splice(actions.indexOf('fold'),1);
+      actions.splice(actions.indexOf('call'),1);
+    }
+    return actions;
   }
 
   /*****************************
    * bet
-   *   @param
+   *   @param  str     playerName
+   *   @param  str     action
+   *   @param  int     tip
    *   @return boolean nextBet -> true:go to next bet/false:end 
    *****************************/
   bet(playerName, action, tip) {
     let nextBet = true;
-    const player = this.players[playerName];
+    const player = this.players_[playerName];
     const preAction = player.action;
-    if (preAction == null && player.betTip == 0) {
-      // init
-      player.hasTips -= this.round;
-      player.betTips += this.round;
-    } else {
-      player.action = action;
-      if (action === 'raise') {
-        if (tip > this.getMaxRaise()) {
-          throw new Error('Not Allowed to put the value');
-        }
-        player.hasTips -= tip;
-        player.betTips += tip;
-      } else if (action === 'call') {
-        const opponent = this.betTurn.indexOf(playerName) - 1 > -1
-                       ? this.players[this.betTurn[this.betTurn.indexOf(playerName) - 1]]
-                       : this.players[this.betTurn[this.betTurn.length - 1]];
-        player.hasTips -= opponent.betTips - player.betTips;
-        player.betTips = opponent.betTips;
-      } else if (action === 'check') {
-        if (preAction == 'check') {
-          throw new Error('Not Allowed to put the value');
-        }
-        if( this.players.every((player, i) => player.action === 'fold') ) {
-          nextBet = false;
-        }
-      } else if (action === 'fold') {
-        nextBet = false;
-      } else {
+    player.action = action;
+    // @todo this.actionCandidates()でcheck, throw削除
+    if (action === 'raise') {
+      if (tip > this.getMaxRaise()) {
         throw new Error('Not Allowed to put the value');
       }
+      player.hasTips -= tip;
+      player.betTips += tip;
+    } else if (action === 'call') {
+      const opponent = this.betTurn.indexOf(playerName) - 1 > -1
+                     ? this.players_[this.betTurn[this.betTurn.indexOf(playerName) - 1]]
+                     : this.players_[this.betTurn[this.betTurn.length - 1]];
+      player.hasTips -= opponent.betTips - player.betTips;
+      player.betTips = opponent.betTips;
+    } else if (action === 'check') {
+      if (preAction == 'check') {
+        throw new Error('Not Allowed to put the value');
+      }
+      if( this.players_.every((player, i) => player.action === 'fold') ) {
+        nextBet = false;
+      }
+    } else if (action === 'fold') {
+      nextBet = false;
+    } else {
+      throw new Error('Not Allowed to put the value');
     }
     return nextBet;
   }
 
   getMaxRaise() {
     let totalTips = 0;
-    let playerNum = this.players.length;
-    for (let i = 0; i < playerNum; i++) {
-      totalTips += this.players[i].betTip;
-    }
-    return Math.floor(totalTips / playerNum);
-  }
-
-  changeBetTurn() {
-    this.betTurn.push(this.betTurn.shift());
+    let num = 0;
+    Object.keys(this.players_).forEach((name) => {
+      num++;
+      totalTips += this.players_[name].betTips;
+    });
+    return Math.floor(totalTips / num);
   }
 
   /*****************************
@@ -159,59 +199,63 @@ export default class AirPocker extends Rule {
    *   Compares their Poker rank.
    *   If both of ranks are the same, compare a highest number of the hand.
    *   Ace(1) is highest. Two(2) is lowest.
-   *   If they are the same, draw.
+   *   If they are the same, draw. (Suit and the Second Number are not considered.)
    *
-   *   Suit and the Second Number are not considered.
-   *   @param
-   *   @return str playerName <- winner
+   *   @return obj {winner: PlayerName, rank: rankName, cards: cards} <- round winner
    *****************************/
-  judge(maxRankFlags) {
-    const field = this.field.view();
-    let max = {rank: {name: '', point: 0}};
-    for (let i=0;i < maxRankFlags.length;i++) {
-      let {name: playerName, maxRankFlag: maxRankFlag} = maxRankFlags[i];
-      let rankCandidates = this.getCombinations_(field[playerName]);
-      if (maxRankFlag) {
-        this.players[playerName].tip = this.players[playerName].tip - 3;
+  judge() {
+    let result = {rank: null, cards: null, winner: null};
+    let totalTip = 0;
+    let maxPoint = 0;
+    Object.keys(this.players_).forEach((name) => {
+      let player = this.players_[name];
+      let playerMax = {rank: null, point: 0, comb: null};
+      if (player.maxRankFlag) {
+        let rankCandidates = this.getCombinations_(this.field[name]);
         for (let i=0;i < rankCandidates.length;i++) {
           let comb = rankCandidates[i];
-          let rank = this.rankByNumbers_(comb);
-          if (rank.name === 'Straight'
-          || rank.name === 'RoyalStraight'
-          || rank.name === 'HighCard') {
-            //flush?
+          let {name: rank, highCardPoint: point} = this.rankByNumbers_(comb);
+          if (rank === 'Straight'
+            || rank === 'HighCard'
+            || rank === 'RoyalStraight') {
+            // @todo Suits管理 - 上から順に使う & disasterはSuitをずらせないかcheck
+            rank = rank === 'HighCard' ? 'Flush' : rank + 'Flush';
           }
-          if (rank.point > max.rank.point) {
-            max.comb = comb;
-            max.rank = rank;
+          point += RANK_POINTS[rank];
+          if (point > playerMax.point) {
+            playerMax.point = point;
+            playerMax.comb = comb;
+            playerMax.rank = rank;
           }
         }
-      } else {
-        const index = Math.floor(Math.random() * rankCandidates.length);
-        const rank = this.rankByNumbers_(rankCandidates[index]);
       }
+      if (maxPoint < playerMax.point) {
+        result.rank = playerMax.rank;
+        maxPoint = playerMax.point;
+        result.cards = playerMax.comb;
+        result.winner = name;
+      }
+      totalTip += player.betTips;
+      player.betTips = 0;
       // delete cards from sideField
-    }
-    // disaster: まずはSuitをずらせないかcheck
-    //if (!win_()) {this.filed.trash();}
-    let trashCards = this.field.return();
-    for (let j=0;j < trashCards.length;j++) {
-      this.field.trash(trashCards[j]);
-    }
-    // this.round++;
-    return {rank: max.rank, card: max.comb};
+      this.field[name] = null;
+    });
+    this.round++;
+    this.betTurn.push(this.betTurn.shift()); // changeBetTurn
+    // get Air
+    this.players_[result.winner].hasTips += totalTip;
+    return result;
   }
 
   /**
    * getCombinations_
    *   Returns an array of five numbers to be the arguement number by summing them.
    *
-   *   @param  int num
-   *   @return obj combinations
+   *   @param  int    num
+   *   @return arr(2) combinations
    */
   getCombinations_(num) {
-    let combinations = [];
-    //let remainNums = this.field.sideField;
+      let combinations = [];
     if (num > 5 && num < 65) {
       for (let a = 1; a < num / 5; a++) {
         let max2 = num - a;
@@ -232,37 +276,20 @@ export default class AirPocker extends Rule {
     return combinations;
   }
 
-  /*****************************
-   * rank
-   *   Retruns the following Poker rank.
-   *   And, adds one HighCard to the rank.
-   *   Ace(1) is highest and Two(2) is lowest.
-   *
-   *   @param  obj cards = {number: int, suit: str}
-   *   @return obj rank = {name: str, point: int}
-   *****************************/
-  rank_(cards) {
-    rankByNumbers_();
-    getSuits();
-    let rank = this.isFlash_(cards) ? {name: 'Flush'} : {};
-  }
-
   /*
    * rankByNumbers_
-   *   @param  arr numbers
-   *   @return obj rank
+   *   @param  arr [int,int,int,int,int]
+   *   @return obj {highCardPoint: int, name: str}
    */
   rankByNumbers_(numbers) {
-    let rank = {point: 0, name: null};
+    let rank = {highCardPoint: 0, name: null};
     numbers.sort((a, b) => a - b);
     if (this.isStraight_(numbers)) {
       rank.name = 'Straight';
-      rank.point = RANK_POINTS.Straight;
       // Adds highest number
-      rank.point += numbers[0] === 1 ? 14 : numbers[numbers.length - 1];
+      rank.highCardPoint = numbers[0] === 1 ? 14 : numbers[numbers.length - 1];
     } else if (this.isRoyalStraight_(numbers)) {
       rank.name = 'RoyalStraight';
-      rank.point = RANK_POINTS.RoyalStraight;
     }
     if (!rank.name) {
       // check pairs
@@ -270,20 +297,17 @@ export default class AirPocker extends Rule {
         pair[n] = pair[n] ? pair[n] + 1 : 1;
         return pair;
       }, {});
-      let highest = 0;
       switch (Object.keys(pairs).length) {
         case 2:
           // 4-1 or 3-2
           for (let n in pairs) {
             if (pairs[n] === 4) {
               rank.name = 'FourCard';
-              rank.point = RANK_POINTS.FourCard;
-              highest = +n === 1 ? 14 : +n;
+              rank.highCardPoint = +n === 1 ? 14 : +n;
               break;
             } else if (pairs[n] === 3) {
               rank.name = 'FullHouse';
-              rank.point = RANK_POINTS.FullHouse;
-              highest = +n === 1 ? 14 : +n;
+              rank.highCardPoint = +n === 1 ? 14 : +n;
               break;
             }
           }
@@ -293,45 +317,30 @@ export default class AirPocker extends Rule {
           for (let n in pairs) {
             if (pairs[n] === 3) {
               rank.name = 'ThreeCard';
-              rank.point = RANK_POINTS.ThreeCard;
-              highest = +n === 1 ? 14 : +n;
+              rank.highCardPoint = +n === 1 ? 14 : +n;
               break;
             } else if (pairs[n] === 2) {
               rank.name = 'TwoPair';
-              rank.point = RANK_POINTS.TwoPair;
-              highest = highest && highest > +n ? highest : +n;
+              rank.highCardPoint = rank.highCardPoint > +n ? rank.highCardPoint : +n;
             }
           }
           break;
         case 4:
           // 2-1-1-1
           rank.name = 'OnePair';
-          rank.point = RANK_POINTS.OnePair;
           for (let n in pairs) {
             if (pairs[n] === 2) {
-              highest = +n;
+              rank.highCardPoint = +n;
               break;
             }
           }
           break;
         default:
           rank.name = 'HighCard';
-          highest = numbers[0] === 1 ? 14 : numbers[numbers.length - 1];
+          rank.highCardPoint = numbers[0] === 1 ? 14 : numbers[numbers.length - 1];
       }
-      rank.point += highest;
     }
     return rank;
-  }
-
-  getSuits_(cards, rank, remainingCards) {
-    if (rank === 'HighCard' || rank === 'Straight' || rank === 'RoyalStraight') {
-      // Suitsの上から順に消費する
-      if (getFlash_()) {
-      }
-    } else {
-      // Suitsの上から順に消費する
-    }
-    return cards;
   }
 
   isFlash_(cards) {
@@ -339,7 +348,7 @@ export default class AirPocker extends Rule {
   }
 
   isStraight_(numbers) {
-    return numbers.every((e, i, self) => e + 1 === self[i + 1]);
+    return numbers.every((e, i, self) => e + 1 === self[i + 1] || i+1 === self.length);
   }
 
   isRoyalStraight_(numbers) {
