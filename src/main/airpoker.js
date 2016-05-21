@@ -101,7 +101,7 @@ export default class AirPocker extends Rule {
 
   /*
    * setRankFlag
-   *   sets maxRankFlag
+   *   Sets maxRankFlag
    *
    *   @param  str playerName
    *   @param  boolean rankFlag
@@ -110,6 +110,12 @@ export default class AirPocker extends Rule {
     this.players_[playerName].maxRankFlag = rankFlag;
   }
 
+  /*
+   * preBet
+   *   Pays entry fee according to every round
+   *
+   *   @return  void
+   */
   preBet() {
     let player;
     //Object.values(this.players_).forEach((player) => {
@@ -121,6 +127,13 @@ export default class AirPocker extends Rule {
     });
   }
 
+  /*
+   * prePlayer
+   *   Gets pre-acting player name
+   *
+   *   @param  str playerName
+   *   @return str pre-playerName
+   */
   prePlayer(playerName) {
     let index = this.betTurn.indexOf(playerName);
     return index > 0 ? this.betTurn[index - 1] : this.betTurn[this.betTurn.length - 1];
