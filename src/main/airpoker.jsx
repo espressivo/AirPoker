@@ -10,7 +10,7 @@ let airPoker = new AirPoker(players);
 
 var AirPokerUi = React.createClass({
   getInitialState: function() {
-    const airPoker = this.props.airPoker;
+    const {airPoker} = this.props;
     return {
       hand: airPoker.findCandidates('You'),
       status: airPoker.getStatus(),
@@ -33,8 +33,7 @@ var AirPokerUi = React.createClass({
     return true;
   },
   setCard: function(card) {
-    const airPoker = this.props.airPoker;
-    const model = this.props.model;
+    const {airPoker, model} = this.props;
     airPoker.setField('You', card);
     airPoker.setField(model.name, model.setCard(airPoker.findCandidates(model.name), airPoker.remainingCards));
     this.setState({
@@ -44,7 +43,7 @@ var AirPokerUi = React.createClass({
     });
   },
   rankFlag: function(rankFlag) {
-    const airPoker = this.props.airPoker;
+    const {airPoker} = this.props;
     airPoker.setRankFlag('You', rankFlag);
     airPoker.setRankFlag(this.props.model.name, this.props.model.rankFlag);
     // exec first betting
@@ -104,7 +103,7 @@ var AirPokerUi = React.createClass({
     }
   },
   render: function() {
-    const model = this.props.model;
+    const {model, airPoker} = this.props;
     let yourCardNode = this.state.hand.map(function(card, i) { // @todo 要Object.assign([], this.state.hand)？/cardはchildrenに
       return (
         <Card card={card} phase={this.state.phase} setCard={this.setCard} key={i + '-' + card}/>
@@ -137,9 +136,15 @@ var AirPokerUi = React.createClass({
           &nbsp;Rank</div>
         );
       } else if (this.state.phase === 'bet') {
-        return this.props.airPoker.actionCandidates('You').map(function(action) {
+        return airPoker.actionCandidates('You').map(function(action) {
+          const raiseOption = [];
+          if (action === 'raise') {
+            for (let i=1; i <= airPoker.gietMaxRaise().length; ++i) {
+              raiseOption.push(i);
+            }
+          }
           return (
-            <Bet bet={this.bet} key={action}>{action}</Bet>
+            <Bet bet={this.bet} key={action} raiseOption={raiseOption}>{action}</Bet>
           );
         }, this);
       } else if (this.state.phase === 'end') {
@@ -195,9 +200,9 @@ var Rank = React.createClass({
 var Bet = React.createClass({
   bet: function(e) {
     e.preventDefault();
-    this.props.bet(this.props.children, 0); // @todo 4 raiseでのtip数を選択できるように
+    this.props.bet(this.props.children, 0); // @todo 4 raiseでのtip数を選択できるように this.props.betをそのまま渡そう,eの中に色々とれる
   },
-  render: function() {                      
+  render: function() {
     return (
       <button className="bet button" type="button" onClick={this.bet}>{this.props.children}</button>
     );
