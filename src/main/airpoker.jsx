@@ -47,7 +47,7 @@ var AirPokerUi = React.createClass({
     airPoker.setRankFlag('You', rankFlag);
     airPoker.setRankFlag(this.props.model.name, this.props.model.rankFlag);
     // exec first betting
-    airPoker.preBet();
+    airPoker.initBet();
     for (let i=0;i < airPoker.betTurn.length;i++) {
       let betPlayer = airPoker.betTurn[i];
       if (betPlayer === 'You') {

@@ -1,5 +1,6 @@
 'use strict';
 import Rule from './trump_framework/rule.js';
+import {Card, SUITS, NUMBERS} from "./trump_framework/card.js";
 
 /*
  * YourPoint = RankPoint + HighCard (+ SuitOrder <- in the future)
@@ -25,7 +26,7 @@ export default class AirPocker extends Rule {
     // init
     const setDeck = {deckNum: 1, JockerNum: 0};
     const setPlayers = [];
-    let field = {};
+    const field = {};
     for (let i=0;i < players.length;i++) {
       setPlayers.push({name: players[i], options: {hasTips: 25, betTips: 0, action: null, maxRankFlag: true}});
       field[players[i]] = null;
@@ -35,9 +36,17 @@ export default class AirPocker extends Rule {
 
     // member
     this.betTurn = players;
-    this.round = 1; // judge回数. judgeは手札がなくなるまで
+    this.round = 1;
     this.field = field; // field.jsは煩雑さ回避のため使わない方針に変更
-    this.remainingCards = this.deck_.showRemains();
+    this.remainingCards = {};
+
+    // set remainingCards
+    NUMBERS.forEach((number) => {
+      //this.remainingCards[number] = Object.values(SUITS);
+      Object.keys(SUITS).forEach((k) => {
+        this.remainingCards[number].push(SUITS[k]);
+      }, this);
+    }, this);
   }
 
   /*
@@ -111,14 +120,13 @@ export default class AirPocker extends Rule {
   }
 
   /*
-   * preBet
+   * initBet
    *   Pays entry fee according to every round
    *
    *   @return  void
    */
-  preBet() {
+  initBet() {
     let player;
-    //Object.values(this.players_).forEach((player) => {
     Object.keys(this.players_).forEach((name) => {
       player = this.players_[name];
       player.hasTips -= this.round;
@@ -222,40 +230,48 @@ export default class AirPocker extends Rule {
     let maxPoint = 0;
     Object.keys(this.players_).forEach((name) => {
       let player = this.players_[name];
-      let playerMax = {rank: null, point: 0, comb: null};
+      let playerMax = {rank: null, cards: [], point: 0};
       if (player.maxRankFlag) {
         let rankCandidates = this.getCombinations_(this.field[name]);
         for (let i=0;i < rankCandidates.length;i++) {
-          let comb = rankCandidates[i];
-          let {name: rank, highCardPoint: point} = this.rankByNumbers_(comb);
+          let suit = null;
+          let numbers = rankCandidates[i];
+          let {name: rank, highCardPoint: point} = this.rankByNumbers_(numbers);
           if (rank === 'Straight'
             || rank === 'HighCard'
             || rank === 'RoyalStraight') {
-            // @todo Suits管理 - 上から順に使う & disasterはSuitをずらせないかcheck
-            rank = rank === 'HighCard' ? 'Flush' : rank + 'Flush';
+            if (suit = this.getFlashSuit_(numbers)) {
+              rank = rank === 'HighCard' ? 'Flush' : rank + 'Flush';
+            }
           }
           point += RANK_POINTS[rank];
           if (point > playerMax.point) {
-            playerMax.point = point;
-            playerMax.comb = comb;
             playerMax.rank = rank;
+            playerMax.point = point;
+            numbers.forEach((number) => {
+              playerMax.cards.push(new Card(number, suit));
+            });
           }
+        }
+        // @todo Suits管理 - 上から順に使う & disasterはSuitをずらせないかcheck
+        for (let i = 0;i < playerMax.cards.length;i++) {
+          playerMax.cards[i] = useCard_(playerMax.cards[i]);
         }
       }
       if (maxPoint < playerMax.point) {
-        result.rank = playerMax.rank;
         maxPoint = playerMax.point;
-        result.cards = playerMax.comb;
+        result.rank = playerMax.rank;
+        result.cards = playerMax.cards;
         result.winner = name;
       }
       totalTip += player.betTips;
       player.betTips = 0;
-      // delete cards from sideField
-      this.field[name] = null;
     });
+    // tear down
     this.round++;
+    this.field = {};
     this.betTurn.push(this.betTurn.shift()); // changeBetTurn
-    // get Air
+    // get Air -> 呼吸で減る@todoがあるので分離した方が綺麗
     this.players_[result.winner].hasTips += totalTip;
     return result;
   }
@@ -268,7 +284,7 @@ export default class AirPocker extends Rule {
    *   @return arr(2) combinations
    */
   getCombinations_(num) {
-      let combinations = [];
+    const combinations = [];
     if (num > 5 && num < 65) {
       for (let a = 1; a < num / 5; a++) {
         let max2 = num - a;
@@ -356,15 +372,59 @@ export default class AirPocker extends Rule {
     return rank;
   }
 
-  isFlash_(cards) {
-    return cards.every((e, i, self) => e.suit === self[0].suit);
+  /*
+   * getFlashSuit_
+   *   Finds an available suit.(if deckNum is 1)
+   *
+   *   @param  arr numbers [int,int,int,int,int]
+   *   @return str suit or null
+   */
+  getFlashSuit_(numbers) {
+    let setSuit;
+    if (!Object.keys(SUITS).some((suit) => {
+      setSuit = SUITS[suit];
+      return numbers.every((number) => {
+        return this.remainingCards[number].indexOf(setSuit) > -1;
+      });
+    }, this)) {
+      setSuit = null;
+    }
+    return setSuit;
   }
 
+  /*
+   * isStraight_
+   *   @param  arr numbers [int,int,int,int,int]
+   *   @return boolean
+   */
   isStraight_(numbers) {
     return numbers.every((e, i, self) => e + 1 === self[i + 1] || i+1 === self.length);
   }
 
+  /*
+   * isRoyalStraight_
+   *   @param  arr numbers [int,int,int,int,int]
+   *   @return boolean
+   */
   isRoyalStraight_(numbers) {
     return numbers.toString() === [1, 10, 11, 12, 13].toString();
   }
+
+  /*
+   * useCard_
+   *   Reduces card from this.remainingCards and sets a suit if the suit is undefined.
+   *
+   *   @param  obj card
+   *   @return obj card
+   */
+  useCard_(card) {
+    if (typeof card.suit === 'undefined') {
+      card.suit = SUITS[this.remainingCards[card.number].shift()];
+    } else {
+      let remainingSuits = this.remainingCards[card.number];
+      remainingSuits.splice(remainingSuits.indexOf(card.suit), 1);
+    }
+    return card;
+  }
+
 }

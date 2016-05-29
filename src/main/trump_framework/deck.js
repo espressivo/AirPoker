@@ -1,6 +1,6 @@
 'use strict';
 
-import {Card, Suits, Numbers} from "./card.js";
+import {Card, SUITS, NUMBERS} from "./card.js";
 import Joker from "./joker.js";
 /*
  * Creates Card class in only this class.
@@ -10,8 +10,8 @@ export default class Deck {
   constructor( {deckNum: deckNum, jockerNum: jockerNum} ) {
     this.deck_ = [];
     for (let i = 0; i < deckNum; i++) {
-      Object.keys(Numbers).forEach(function(num) {
-        Object.keys(Suits).forEach(function(suit) {
+      NUMBERS.forEach(function(num) {
+        Object.keys(SUITS).forEach(function(suit) {
           this.push(new Card(num, suit));
         }, this);
       }, this.deck_);

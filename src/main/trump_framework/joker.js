@@ -8,13 +8,14 @@ export default class Joker {
   }
 
   /**
-   * Sets joker
+   * turnInto
+   *  Turns this joker into a Card obj
    * @member int number
    * @member str suit
    */
-  transform(number, suit) {
-    const transCard = new Card(number, suit);
-    this.number = transCard.number;
-    this.suit   = transCard.suit;
+  turnInto(number, suit) {
+    const joker = new Card(number, suit);
+    this.number = joker.number;
+    this.suit = joker.suit;
   }
 }
