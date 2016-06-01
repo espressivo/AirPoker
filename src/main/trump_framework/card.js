@@ -34,10 +34,17 @@ export class Card {
   constructor(number, suit) {
     this.number;
     this.suit;
-    // set value
+    setNumber_(number);
+    setSuit_(suit);
+  }
+
+  setNumber_(number){
     if (NUMBERS.indexOf(number) > -1) {
       this.number = number;
     }
+  }
+
+  setSuit_(suit){
     if (Object.keys(SUITS).indexOf(suit) > -1) {
       this.suit = SUITS[suit];
     }

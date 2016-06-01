@@ -33,7 +33,13 @@ export default class Deck {
     if (typeof card == 'undefined') {
       indexNum = this.topCardIndex_ || Math.floor(Math.random() * this.deck_.length);
     } else {
-      indexNum = this.deck_.indexOf(card);
+      const cardStr = JSON.stringify(card);
+      for (let i=0; i < this.deck_.length; i++) {
+        if (cardStr === JSON.stringify(this.deck_[i])) {
+          indexNum = i;
+          break;
+        }
+      }
     }
     let drawCard = this.deck_[indexNum];
     this.remove_(indexNum);
