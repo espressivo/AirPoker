@@ -7,6 +7,24 @@ body {
     word-wrap: break-word;
     word-break: break-all;
     background-color: #59AAE2;
+    margin: 0;
+}
+
+#wrapper {
+    min-width: 800px;
+    position: relative;
+}
+
+.git-label {
+    position: absolute;
+    top: 0;
+    right: 0;
+    border: 0;
+}
+
+#container {
+    width: 500px;
+    margin: 0 auto;
 }
 
 .description {
@@ -70,6 +88,4 @@ body {
     text-align: center;
     padding: 12px 0;
     font-size: 0.8rem;
-    bottom: 0;
-    right: auto;
 }

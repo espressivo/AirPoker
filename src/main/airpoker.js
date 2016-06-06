@@ -27,8 +27,11 @@ export default class AirPocker extends Rule {
     const setDeck = {deckNum: 1, JockerNum: 0};
     const setPlayers = [];
     const field = {};
-    for (let i=0;i < players.length;i++) {
-      setPlayers.push({name: players[i], options: {hasTips: 25, betTips: 0, action: null, maxRankFlag: true}});
+    for (let i = 0; i < players.length; i++) {
+      setPlayers.push({
+        name: players[i],
+        options: {hasTips: 25, betTips: 0, action: null, maxRankFlag: true}
+      });
       field[players[i]] = null;
     }
     const initHandNum = Math.floor((setDeck.deckNum * 52 + setDeck.JockerNum) / 5 / players.length); // 5
@@ -42,6 +45,7 @@ export default class AirPocker extends Rule {
 
     // set remainingCards
     NUMBERS.forEach((number) => {
+      this.remainingCards[number] = [];
       //this.remainingCards[number] = Object.values(SUITS);
       Object.keys(SUITS).forEach((k) => {
         this.remainingCards[number].push(SUITS[k]);
@@ -89,9 +93,9 @@ export default class AirPocker extends Rule {
   getStatus() {
     let status = {};
     Object.keys(this.players_).forEach((name) => {
-      status[name] = { remainingAir: this.players_[name].hasTips
-        ,betAir: this.players_[name].betTips
-        ,action: this.players_[name].action };
+      status[name] = {remainingAir: this.players_[name].hasTips,
+        betAir: this.players_[name].betTips,
+        action: this.players_[name].action};
     });
     return status;
   }
@@ -146,7 +150,7 @@ export default class AirPocker extends Rule {
     let index = this.betTurn.indexOf(playerName);
     return index > 0 ? this.betTurn[index - 1] : this.betTurn[this.betTurn.length - 1];
   }
-  
+
   /*****************************
    * actionCandidates
    *   @param  str playerName
@@ -156,7 +160,8 @@ export default class AirPocker extends Rule {
     let actions = ['raise', 'call', 'check', 'fold'];
     let status = this.getStatus();
     let prePlayer = this.prePlayer(playerName);
-    if (status[playerName].action == 'check' || status[prePlayer].action == 'raise') {
+    if (status[playerName].action == 'check'
+      || status[prePlayer].action == 'raise') {
       actions.splice(actions.indexOf('check'),1);
     } else if (status[playerName].action == null && status[prePlayer].action == null) {
       actions.splice(actions.indexOf('fold'),1);
@@ -170,7 +175,7 @@ export default class AirPocker extends Rule {
    *   @param  str     playerName
    *   @param  str     action
    *   @param  int     tip
-   *   @return boolean nextBet -> true:go to next bet/false:end 
+   *   @return boolean nextBet -> true:go to next bet/false:end
    *****************************/
   bet(playerName, action, tip) {
     let nextBet = true;

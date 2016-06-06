@@ -139,7 +139,7 @@ var AirPokerUi = React.createClass({
         return airPoker.actionCandidates('You').map(function(action) {
           const raiseOption = [];
           if (action === 'raise') {
-            for (let i=1; i <= airPoker.gietMaxRaise().length; ++i) {
+            for (let i=1; i <= airPoker.getMaxRaise().length; ++i) {
               raiseOption.push(i);
             }
           }
