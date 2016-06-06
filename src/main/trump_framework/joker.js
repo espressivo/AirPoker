@@ -1,10 +1,9 @@
 'use strict';
 import {Card} from "./card.js";
 
-export default class Joker {
+export default class Joker extends Card {
   constructor() {
-    this.number;
-    this.suit;
+    super(null, null);
   }
 
   /**
@@ -14,8 +13,7 @@ export default class Joker {
    * @member str suit
    */
   turnInto(number, suit) {
-    const joker = new Card(number, suit);
-    this.number = joker.number;
-    this.suit = joker.suit;
+    this.setNumber_(number);
+    this.setSuit_(suit);
   }
 }
